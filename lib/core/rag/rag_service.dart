@@ -1,4 +1,5 @@
 import '../../data/repositories/polaroid_repository.dart';
+import '../../data/services/local_object_lexicon.dart';
 import '../../domain/models/analysis_result.dart';
 import 'dictionary_retriever.dart';
 import 'memory_retriever.dart';
@@ -57,7 +58,22 @@ class RagService {
     required String languageCode,
   }) async {
     final primary = rawResult.primaryObject;
-    final label = primary?.labelEn ?? 'object';
+    var label = primary?.labelEn ?? 'object';
+
+    // If label is generic or empty, recover from dictionary using targetWord/transliteration
+    if (label.isEmpty || label.toLowerCase() == 'object' || label.toLowerCase() == 'item') {
+      if (primary != null) {
+        final rev = LocalObjectLexicon.reverseLookup(
+          targetWord: primary.targetWord,
+          transliteration: primary.transliteration,
+          secondaryScript: primary.secondaryScript,
+          langCode: languageCode,
+        );
+        if (rev != null && rev.labelEn.isNotEmpty) {
+          label = rev.labelEn;
+        }
+      }
+    }
 
     final context = await retrieveContext(
       labelEn: label,
@@ -71,6 +87,7 @@ class RagService {
       objects = objects.map((obj) {
         if (obj.id == rawResult.primaryObjectId) {
           return obj.copyWith(
+            labelEn: match.labelEn,
             targetWord: match.targetWord,
             secondaryScript: match.secondaryScript,
             transliteration: match.transliteration,

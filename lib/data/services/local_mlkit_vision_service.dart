@@ -29,8 +29,8 @@ class LocalMlKitVisionService implements VisionService {
 
   void _initLabeler() {
     try {
-      // Allow candidates with >= 40% confidence through so confidence threshold filtering applies uniformly
-      final options = ImageLabelerOptions(confidenceThreshold: 0.40);
+      // Allow candidates with >= 25% confidence through so everyday objects and containers are recognized
+      final options = ImageLabelerOptions(confidenceThreshold: 0.25);
       _labeler = ImageLabeler(options: options);
       _isInitialized = true;
     } catch (e) {
@@ -154,7 +154,9 @@ class LocalMlKitVisionService implements VisionService {
       'rectangle', 'circle', 'square', 'pattern', 'font', 'liquid',
       'material property', 'wood', 'plastic', 'glass', 'metal', 'sky',
       'line', 'snapshot', 'photography', 'parallel', 'triangle', 'slope',
-      'room', 'floor', 'ceiling', 'flooring', 'shade', 'shadow'
+      'room', 'floor', 'ceiling', 'flooring', 'shade', 'shadow',
+      'automotive wheel system', 'wheel', 'tire', 'cylinder', 'hardware',
+      'black', 'white', 'grey', 'gray'
     };
     return !ignoredGeneric.contains(label);
   }

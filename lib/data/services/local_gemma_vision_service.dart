@@ -1,59 +1,67 @@
+import 'dart:convert';
 import 'dart:developer' as developer;
-import 'dart:io';
 import 'dart:typed_data';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_gemma/flutter_gemma.dart';
 import '../../core/languages/language_profile.dart';
 import '../../domain/models/analysis_result.dart';
 import '../../domain/services/vision_service.dart';
-import 'mock_vision_service.dart';
+import 'local_mlkit_vision_service.dart';
+import 'local_vlm_model_manager.dart';
 
-/// Service implementing Local On-Device Vision AI using Google Gemma / PaliGemma.
+/// Service implementing Local On-Device Vision AI using Google Gemma / PaliGemma via flutter_gemma.
 /// 
-/// Designed with high resilience and graceful degradation:
-/// 1. Checks if a local quantized weights file (e.g. `paligemma.bin` or `gemma.bin`) exists.
-/// 2. If present and loaded, performs on-device visual token inference.
-/// 3. If model weights are not yet downloaded to the device directory, falls back to
-///    an offline heuristic/mock generator with clear status logging so UI never crashes.
+/// Designed with dual-tier offline resilience and graceful degradation:
+/// 1. Checks if a local quantized weights file exists via [LocalVlmModelManager].
+/// 2. If present and loaded, runs multimodal token inference through [FlutterGemma].
+/// 3. If model weights are not yet downloaded to the device or inference fails, seamlessly
+///    degrades to Tier 1 instant computer vision ([LocalMlKitVisionService]).
 class LocalGemmaVisionService implements VisionService {
-  final MockVisionService _fallbackService = MockVisionService();
+  final LocalMlKitVisionService _mlkitService = LocalMlKitVisionService();
+  final LocalVlmModelManager _modelManager = LocalVlmModelManager();
   bool _isModelLoaded = false;
-  String? _modelPath;
+  InferenceModel? _activeModel;
 
   LocalGemmaVisionService();
 
   /// Check whether local model weights exist in the app's documents directory
   Future<bool> isModelAvailable() async {
-    try {
-      final docDir = await getApplicationDocumentsDirectory();
-      final modelFile = File('${docDir.path}/models/gemma_vision.bin');
-      final exists = await modelFile.exists();
-      if (exists) {
-        _modelPath = modelFile.path;
-      }
-      return exists;
-    } catch (e) {
-      developer.log('Error checking local model availability: $e', name: 'LocalGemmaVisionService');
-      return false;
-    }
+    return _modelManager.checkModelAvailability();
   }
 
-  /// Initialize the local Gemma engine if weights are present
+  /// Initialize the local Gemma / PaliGemma engine via flutter_gemma if weights are present
   Future<bool> initialize() async {
     final available = await isModelAvailable();
-    if (available && _modelPath != null) {
+    if (available && _modelManager.modelPath != null) {
       try {
-        // Ready for flutter_gemma / LiteRT model initialization:
-        // await FlutterGemmaPlugin.instance.loadModel(path: _modelPath!);
+        final path = _modelManager.modelPath!;
+        developer.log(
+          'Configuring flutter_gemma model from $path (${_modelManager.formattedModelSize})',
+          name: 'LocalGemmaVisionService',
+        );
+
+        await FlutterGemma.installModel(
+          modelType: ModelType.general,
+        ).fromFile(path).install();
+
+        _activeModel = await FlutterGemma.getActiveModel(
+          maxTokens: 512,
+          supportImage: true,
+        );
+
         _isModelLoaded = true;
-        developer.log('Loaded local Gemma vision weights from $_modelPath', name: 'LocalGemmaVisionService');
+        developer.log('flutter_gemma active model successfully ready', name: 'LocalGemmaVisionService');
         return true;
       } catch (e) {
-        developer.log('Failed to load local Gemma model: $e', name: 'LocalGemmaVisionService');
+        developer.log('Failed to load flutter_gemma model: $e', name: 'LocalGemmaVisionService');
         _isModelLoaded = false;
+        _activeModel = null;
         return false;
       }
     }
-    developer.log('Local Gemma weights not yet downloaded, using on-device darkroom fallback', name: 'LocalGemmaVisionService');
+    developer.log(
+      'Local VLM weights not found, using Tier 1 instant computer vision',
+      name: 'LocalGemmaVisionService',
+    );
     return false;
   }
 
@@ -62,68 +70,38 @@ class LocalGemmaVisionService implements VisionService {
     required Uint8List imageBytes,
     required LanguageProfile language,
   }) async {
-    if (!_isModelLoaded) {
+    await _modelManager.checkModelAvailability();
+    if (!_isModelLoaded && _modelManager.hasModel) {
       await initialize();
     }
 
-    if (!_isModelLoaded) {
+    if (!_isModelLoaded || _activeModel == null) {
       developer.log(
-        'Local Gemma weights not loaded. Executing offline darkroom heuristics.',
+        'flutter_gemma weights not loaded on device. Executing Tier 1 instant computer vision.',
         name: 'LocalGemmaVisionService',
       );
-      // Degrades gracefully to local simulated darkroom so the user is never blocked
-      return _fallbackService.analyze(imageBytes: imageBytes, language: language);
+      return _mlkitService.analyze(imageBytes: imageBytes, language: language);
     }
 
     try {
-      // Execute local Gemma multimodal prompt
-      // Execute optimized on-device multimodal prompt with anchored framing and few-shot calibration
       final prompt = '''
-Task: Memoria Autonomous Vision & Pedagogical Lexicon Agent.
-Role: Analyze this photograph. Identify 1 to 3 tangible physical objects in the image.
-Reject human faces or private PII.
-Focus on tangible everyday items: tools, tableware, drinks, electronics, plants, animals, vehicles, furniture.
-Select exactly ONE prominent focal object as "obj_01".
+Task: Identify 1 to 3 tangible physical objects in this photograph.
+Target Language: ${language.code} (${language.displayName}).
+${language.promptInstructions}
 
-Target Language: ${language.code} (${language.displayName})
-Pedagogical Instructions: ${language.promptInstructions}
-
-FEW-SHOT EXAMPLES:
-Example 1 (Ceramic coffee mug):
-{
-  "label_en": "Coffee Mug",
-  "target_word": "珈琲碗",
-  "secondary_script": "コーヒーカップ",
-  "transliteration": "koohii kappu",
-  "part_of_speech": "Noun",
-  "difficulty_level": "N5",
-  "confidence": 0.95
-}
-
-Example 2 (Study book):
-{
-  "label_en": "Book",
-  "target_word": "本",
-  "secondary_script": "ほん",
-  "transliteration": "hon",
-  "part_of_speech": "Noun",
-  "difficulty_level": "N5",
-  "confidence": 0.92
-}
-
-STRICT JSON OUTPUT REQUIRED:
+Return strict JSON only:
 {
   "session_id": "mem_local_${DateTime.now().millisecondsSinceEpoch}",
   "language_code": "${language.code}",
   "primary_object_id": "obj_01",
-  "scene_description": "concise scene context (max 60 chars)",
+  "scene_description": "concise scene context",
   "detected_objects": [
     {
       "id": "obj_01",
-      "label_en": "concise english noun",
-      "target_word": "authentic native script word",
-      "secondary_script": "phonetic reading or secondary script",
-      "transliteration": "pronunciation / romaji",
+      "label_en": "object name in English",
+      "target_word": "word in native script",
+      "secondary_script": "phonetic reading",
+      "transliteration": "pronunciation",
       "part_of_speech": "Noun",
       "difficulty_level": "A1 or N5",
       "confidence": 0.95,
@@ -133,16 +111,43 @@ STRICT JSON OUTPUT REQUIRED:
 }
 ''';
 
-      // Example local model inference call placeholder:
-      // final responseString = await FlutterGemmaPlugin.instance.getVisionResponse(image: imageBytes, prompt: prompt);
-      // For now parse response:
-      developer.log('Running local Gemma inference with prompt: $prompt', name: 'LocalGemmaVisionService');
-      
-      // Fallback safeguard if local generation produces empty
-      return _fallbackService.analyze(imageBytes: imageBytes, language: language);
+      developer.log('Executing flutter_gemma multimodal inference', name: 'LocalGemmaVisionService');
+
+      final session = await _activeModel!.createSession(
+        enableVisionModality: true,
+      );
+      await session.addQueryChunk(
+        Message.withImage(
+          text: prompt,
+          imageBytes: imageBytes,
+          isUser: true,
+        ),
+      );
+      final responseText = await session.getResponse();
+      await session.close();
+
+      final cleanJson = _extractJson(responseText);
+      if (cleanJson != null) {
+        final parsed = jsonDecode(cleanJson) as Map<String, dynamic>;
+        return AnalysisResult.fromJson(parsed);
+      }
+
+      developer.log('Could not parse valid JSON from flutter_gemma output, falling back to ML Kit', name: 'LocalGemmaVisionService');
+      return _mlkitService.analyze(imageBytes: imageBytes, language: language);
     } catch (e) {
-      developer.log('Local Gemma inference failed: $e, falling back', name: 'LocalGemmaVisionService');
-      return _fallbackService.analyze(imageBytes: imageBytes, language: language);
+      developer.log('flutter_gemma inference error: $e, falling back to ML Kit', name: 'LocalGemmaVisionService');
+      return _mlkitService.analyze(imageBytes: imageBytes, language: language);
     }
+  }
+
+  String? _extractJson(String raw) {
+    try {
+      final startIndex = raw.indexOf('{');
+      final endIndex = raw.lastIndexOf('}');
+      if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+        return raw.substring(startIndex, endIndex + 1);
+      }
+    } catch (_) {}
+    return null;
   }
 }

@@ -101,6 +101,26 @@ class LocalObjectLexicon {
     'workbench': 'desk',
     'window': 'window',
     'door': 'door',
+    'trash can': 'trash can',
+    'trashcan': 'trash can',
+    'trash': 'trash can',
+    'waste': 'trash can',
+    'waste container': 'trash can',
+    'waste container system': 'trash can',
+    'wastebasket': 'trash can',
+    'garbage': 'trash can',
+    'garbage can': 'trash can',
+    'dustbin': 'trash can',
+    'rubbish': 'trash can',
+    'rubbish bin': 'trash can',
+    'litter bin': 'trash can',
+    'wheelie bin': 'trash can',
+    'recycling bin': 'trash can',
+    'bin': 'trash can',
+    'refuse': 'trash can',
+    'dumpster': 'trash can',
+    'bucket': 'bucket',
+    'pail': 'bucket',
 
     // Gadgets & Tools
     'laptop': 'laptop',
@@ -207,6 +227,8 @@ class LocalObjectLexicon {
       case 'pizza':
       case 'cake':
       case 'clock':
+      case 'trash can':
+      case 'bucket':
       case 'cat':
       case 'dog':
       case 'bird':
@@ -466,6 +488,22 @@ class LocalObjectLexicon {
       transliteration: 'tobira',
       partOfSpeech: 'Noun',
       difficultyLevel: 'N4',
+    ),
+    'trash can': const LexiconEntry(
+      labelEn: 'Trash Can',
+      targetWord: 'ゴミ箱',
+      secondaryScript: 'ごみばこ',
+      transliteration: 'gomibako',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N4',
+    ),
+    'bucket': const LexiconEntry(
+      labelEn: 'Bucket',
+      targetWord: 'バケツ',
+      secondaryScript: 'ばけつ',
+      transliteration: 'baketsu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
     ),
 
     // Travel & Urban
@@ -851,6 +889,22 @@ class LocalObjectLexicon {
       partOfSpeech: 'Noun',
       difficultyLevel: 'A1',
     ),
+    'trash can': LexiconEntry(
+      labelEn: 'Trash Can',
+      targetWord: BaybayinEngine.transliterate('basurahan'),
+      secondaryScript: 'basurahan',
+      transliteration: '[ba-su-ra-han]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'bucket': LexiconEntry(
+      labelEn: 'Bucket',
+      targetWord: BaybayinEngine.transliterate('timba'),
+      secondaryScript: 'timba',
+      transliteration: '[tim-ba]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
 
     // Travel & Urban
     'bicycle': LexiconEntry(
@@ -1203,6 +1257,22 @@ class LocalObjectLexicon {
       partOfSpeech: 'Noun • f',
       difficultyLevel: 'A1',
     ),
+    'trash can': const LexiconEntry(
+      labelEn: 'Trash Can',
+      targetWord: 'cubo de basura',
+      secondaryScript: 'el cubo de basura',
+      transliteration: '[koo-boh deh bah-soo-rah]',
+      partOfSpeech: 'Sustantivo',
+      difficultyLevel: 'A1',
+    ),
+    'bucket': const LexiconEntry(
+      labelEn: 'Bucket',
+      targetWord: 'cubo',
+      secondaryScript: 'el cubo',
+      transliteration: '[koo-boh]',
+      partOfSpeech: 'Sustantivo',
+      difficultyLevel: 'A1',
+    ),
     'bicycle': const LexiconEntry(
       labelEn: 'Bicycle',
       targetWord: 'Bicicleta',
@@ -1486,6 +1556,22 @@ class LocalObjectLexicon {
       partOfSpeech: 'Noun',
       difficultyLevel: 'HSK2',
     ),
+    'trash can': const LexiconEntry(
+      labelEn: 'Trash Can',
+      targetWord: '垃圾桶',
+      secondaryScript: 'lājītǒng',
+      transliteration: 'lājītǒng',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'bucket': const LexiconEntry(
+      labelEn: 'Bucket',
+      targetWord: '水桶',
+      secondaryScript: 'shuǐtǒng',
+      transliteration: 'shuǐtǒng',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
 
     // Tech & Personal Items
     'laptop': const LexiconEntry(
@@ -1674,22 +1760,137 @@ class LocalObjectLexicon {
     ),
   };
 
+  static String _cleanForComparison(String input) {
+    var s = input.trim().toLowerCase();
+    // Strip brackets, parentheses, punctuation, and bullets
+    s = s.replaceAll(RegExp(r'[\[\]\(\)\{\}\.,;:\-_/\\·•]'), ' ');
+    // Strip common leading articles
+    for (final article in ['el ', 'la ', 'los ', 'las ', 'un ', 'una ', 'der ', 'die ', 'das ']) {
+      if (s.startsWith(article)) {
+        s = s.substring(article.length);
+      }
+    }
+    return s.replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
+  /// Bidirectional reverse lookup: Given a target word, transliteration, or secondary script
+  /// (e.g. '猫', 'neko', 'ねこ', 'pusa', 'gato'), finds the matching LexiconEntry across
+  /// the multilingual offline dictionary.
+  static LexiconEntry? reverseLookup({
+    String? word,
+    String? targetWord,
+    String? transliteration,
+    String? secondaryScript,
+    String? langCode,
+  }) {
+    final queryCandidates = <String>[];
+    void addCandidate(String? s) {
+      if (s != null && s.trim().isNotEmpty) {
+        final clean = _cleanForComparison(s);
+        if (clean.isNotEmpty && !queryCandidates.contains(clean)) {
+          queryCandidates.add(clean);
+        }
+        final rawClean = s.trim().toLowerCase();
+        if (rawClean.isNotEmpty && !queryCandidates.contains(rawClean)) {
+          queryCandidates.add(rawClean);
+        }
+      }
+    }
+
+    addCandidate(word);
+    addCandidate(targetWord);
+    addCandidate(transliteration);
+    addCandidate(secondaryScript);
+
+    if (queryCandidates.isEmpty) return null;
+
+    final code = langCode?.trim().toLowerCase();
+    final List<Map<String, LexiconEntry>> mapsToSearch = [];
+
+    if (code == 'ja') {
+      mapsToSearch.add(_japanese);
+    } else if (code == 'fil' || code == 'tl') {
+      mapsToSearch.add(_filipino);
+    } else if (code == 'zh' || (code != null && code.startsWith('zh'))) {
+      mapsToSearch.add(_mandarin);
+    } else if (code == 'es') {
+      mapsToSearch.add(_spanish);
+    } else {
+      mapsToSearch.addAll([_japanese, _filipino, _spanish, _mandarin]);
+    }
+
+    // Pass 1: exact matches within target language maps
+    for (final dict in mapsToSearch) {
+      for (final entry in dict.values) {
+        final entryWords = [
+          _cleanForComparison(entry.targetWord),
+          _cleanForComparison(entry.transliteration),
+          _cleanForComparison(entry.secondaryScript),
+          _cleanForComparison(entry.labelEn),
+          entry.targetWord.trim().toLowerCase(),
+          entry.transliteration.trim().toLowerCase(),
+          entry.secondaryScript.trim().toLowerCase(),
+          entry.labelEn.trim().toLowerCase(),
+        ];
+        for (final query in queryCandidates) {
+          if (entryWords.contains(query)) {
+            return entry;
+          }
+        }
+      }
+    }
+
+    // Pass 2: check all remaining dictionaries if not found yet
+    final allMaps = [_japanese, _filipino, _spanish, _mandarin];
+    for (final dict in allMaps) {
+      if (mapsToSearch.contains(dict)) continue;
+      for (final entry in dict.values) {
+        final entryWords = [
+          _cleanForComparison(entry.targetWord),
+          _cleanForComparison(entry.transliteration),
+          _cleanForComparison(entry.secondaryScript),
+          _cleanForComparison(entry.labelEn),
+          entry.targetWord.trim().toLowerCase(),
+          entry.transliteration.trim().toLowerCase(),
+          entry.secondaryScript.trim().toLowerCase(),
+          entry.labelEn.trim().toLowerCase(),
+        ];
+        for (final query in queryCandidates) {
+          if (entryWords.contains(query)) {
+            return entry;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
   /// Lookup a detected class name for a given language code (ja, fil, es, zh) with synonym normalization.
+  /// If normal lookup fails (e.g. className is a target word, transliteration, or script like '猫' or 'neko'),
+  /// seamlessly falls back to reverseLookup.
   static LexiconEntry? lookup({
     required String className,
     required String langCode,
   }) {
     final key = normalizeClassName(className);
     final code = langCode.trim().toLowerCase();
+    LexiconEntry? result;
     if (code == 'ja') {
-      return _japanese[key];
+      result = _japanese[key];
     } else if (code == 'fil' || code == 'tl') {
-      return _filipino[key];
+      result = _filipino[key];
     } else if (code == 'zh' || code.startsWith('zh')) {
-      return _mandarin[key];
+      result = _mandarin[key];
     } else {
-      return _spanish[key];
+      result = _spanish[key];
     }
+
+    if (result != null) return result;
+
+    // Resilient fallback: If className was actually a native word, romaji, or script,
+    // reverse-lookup the dictionary.
+    return reverseLookup(word: className, langCode: langCode);
   }
 
   /// Check if a detected class has rich offline mappings

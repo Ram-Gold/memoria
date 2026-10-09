@@ -10,11 +10,15 @@ import 'package:go_router/go_router.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_brands/flutter_brands.dart';
 import '../../app/providers.dart';
+import '../../core/ai/ai_settings_provider.dart';
+import '../../core/constants/ai_providers.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/theme/memoria_tokens.dart';
 import '../../core/widgets/language_flag_icon.dart';
 import 'language_picker_sheet.dart';
+import 'widgets/ai_settings_sheet.dart';
 
 class CameraScreen extends ConsumerStatefulWidget {
   const CameraScreen({super.key});
@@ -416,12 +420,22 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
     HapticFeedback.selectionClick();
   }
 
+  void _showAiSettingsSheet() {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const AiSettingsSheet(),
+    );
+  }
+
   void _toggleAiMode() {
-    final current = ref.read(aiVisionModeProvider);
-    final next = current == AiVisionMode.cloudMistral
-        ? AiVisionMode.localOnDevice
-        : AiVisionMode.cloudMistral;
-    ref.read(aiVisionModeProvider.notifier).state = next;
+    final current = ref.read(aiEngineModeProvider);
+    final next = current == AiEngineMode.cloud
+        ? AiEngineMode.local
+        : AiEngineMode.cloud;
+    ref.read(aiEngineModeProvider.notifier).setMode(next);
     HapticFeedback.selectionClick();
   }
 
@@ -479,7 +493,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
     final activeLanguage = ref.watch(activeLanguageProvider);
     final format = ref.watch(selectedPolaroidFormatProvider);
     final flashMode = ref.watch(cameraFlashModeProvider);
-    final aiMode = ref.watch(aiVisionModeProvider);
+    final aiEngineMode = ref.watch(aiEngineModeProvider);
+    final selectedCloud = ref.watch(selectedCloudProviderProvider);
     final polaroidsAsync = ref.watch(polaroidsProvider);
 
     ref.listen<FlashMode>(cameraFlashModeProvider, (previous, next) async {
@@ -620,9 +635,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                         ),
                       ),
 
-                      // AI Mode Toggle
+                      const SizedBox(width: 8),
+
+                      // AI Engine & Model Settings
                       GestureDetector(
-                        onTap: _toggleAiMode,
+                        onTap: _showAiSettingsSheet,
+                        onLongPress: _toggleAiMode,
                         child: Container(
                           width: 44,
                           height: 44,
@@ -631,13 +649,28 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                             shape: BoxShape.circle,
                           ),
                           child: Center(
-                            child: Icon(
-                              aiMode == AiVisionMode.cloudMistral
-                                  ? LucideIcons.cloud
-                                  : LucideIcons.cpu,
-                              size: 22,
-                              color: const Color(0xFFFFB597),
-                            ),
+                            child: aiEngineMode == AiEngineMode.local
+                                ? const Icon(
+                                    LucideIcons.cpu,
+                                    size: 22,
+                                    color: Color(0xFFFFB597),
+                                  )
+                                : Container(
+                                    width: 26,
+                                    height: 26,
+                                    padding: const EdgeInsets.all(3.5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Center(
+                                      child: BrandIcon(
+                                        selectedCloud.brandIcon,
+                                        width: 17,
+                                        height: 17,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

@@ -1,3 +1,4 @@
+import '../../data/services/local_object_lexicon.dart';
 import 'detected_object.dart';
 
 class Polaroid {
@@ -7,6 +8,7 @@ class Polaroid {
   final String languageCode;
   final String selectedObjectId;
   final String selectedWord;
+  final String? labelEn;
   final String? secondaryScript;
   final String? transliteration;
   final String? partOfSpeech;
@@ -25,6 +27,7 @@ class Polaroid {
     required this.languageCode,
     required this.selectedObjectId,
     required this.selectedWord,
+    this.labelEn,
     this.secondaryScript,
     this.transliteration,
     this.partOfSpeech,
@@ -44,6 +47,7 @@ class Polaroid {
     String? languageCode,
     String? selectedObjectId,
     String? selectedWord,
+    String? labelEn,
     String? secondaryScript,
     String? transliteration,
     String? partOfSpeech,
@@ -62,6 +66,7 @@ class Polaroid {
       languageCode: languageCode ?? this.languageCode,
       selectedObjectId: selectedObjectId ?? this.selectedObjectId,
       selectedWord: selectedWord ?? this.selectedWord,
+      labelEn: labelEn ?? this.labelEn,
       secondaryScript: secondaryScript ?? this.secondaryScript,
       transliteration: transliteration ?? this.transliteration,
       partOfSpeech: partOfSpeech ?? this.partOfSpeech,
@@ -83,6 +88,7 @@ class Polaroid {
       'language_code': languageCode,
       'selected_object_id': selectedObjectId,
       'selected_word': selectedWord,
+      'label_en': labelEn,
       'secondary_script': secondaryScript,
       'transliteration': transliteration,
       'part_of_speech': partOfSpeech,
@@ -103,6 +109,7 @@ class Polaroid {
       languageCode: map['language_code']?.toString() ?? 'ja',
       selectedObjectId: map['selected_object_id']?.toString() ?? '',
       selectedWord: map['selected_word']?.toString() ?? '',
+      labelEn: map['label_en']?.toString(),
       secondaryScript: map['secondary_script']?.toString(),
       transliteration: map['transliteration']?.toString(),
       partOfSpeech: map['part_of_speech']?.toString(),
@@ -114,5 +121,76 @@ class Polaroid {
       createdAt: DateTime.tryParse(map['created_at']?.toString() ?? '') ?? DateTime.now(),
       detectedObjects: objects,
     );
+  }
+
+  /// Foolproof resolution of the authentic English meaning for this polaroid.
+  /// Guarantees that vocabulary never displays placeholder artifacts.
+  String get resolvedEnglishLabel {
+    // 1. Direct labelEn stored on the Polaroid
+    if (labelEn != null && labelEn!.trim().isNotEmpty && labelEn!.trim().toLowerCase() != 'object') {
+      return labelEn!.trim();
+    }
+
+    // 2. Object matching selectedObjectId
+    if (selectedObjectId.isNotEmpty) {
+      for (final obj in detectedObjects) {
+        if (obj.id == selectedObjectId &&
+            obj.labelEn.trim().isNotEmpty &&
+            obj.labelEn.trim().toLowerCase() != 'object') {
+          return obj.labelEn.trim();
+        }
+      }
+    }
+
+    // 3. Object matching targetWord or transliteration
+    for (final obj in detectedObjects) {
+      final matchesWord = obj.targetWord.trim().toLowerCase() == selectedWord.trim().toLowerCase();
+      final matchesTranslit = transliteration != null &&
+          transliteration!.trim().isNotEmpty &&
+          obj.transliteration?.trim().toLowerCase() == transliteration!.trim().toLowerCase();
+      if ((matchesWord || matchesTranslit) &&
+          obj.labelEn.trim().isNotEmpty &&
+          obj.labelEn.trim().toLowerCase() != 'object') {
+        return obj.labelEn.trim();
+      }
+    }
+
+    // 4. Reverse dictionary lookup using selectedWord, transliteration, secondaryScript
+    final reverse = LocalObjectLexicon.reverseLookup(
+      targetWord: selectedWord,
+      transliteration: transliteration,
+      secondaryScript: secondaryScript,
+      langCode: languageCode,
+    );
+    if (reverse != null && reverse.labelEn.trim().isNotEmpty) {
+      return reverse.labelEn.trim();
+    }
+
+    // 5. Forward lookup in dictionary (if selectedWord was already English)
+    final normal = LocalObjectLexicon.lookup(
+      className: selectedWord,
+      langCode: languageCode,
+    );
+    if (normal != null && normal.labelEn.trim().isNotEmpty) {
+      return normal.labelEn.trim();
+    }
+
+    // 6. First non-generic object in detectedObjects
+    for (final obj in detectedObjects) {
+      if (obj.labelEn.trim().isNotEmpty && obj.labelEn.trim().toLowerCase() != 'object') {
+        return obj.labelEn.trim();
+      }
+    }
+
+    // 7. Clean capitalized transliteration
+    if (transliteration != null && transliteration!.trim().isNotEmpty) {
+      final clean = transliteration!.trim().replaceAll(RegExp(r'[\[\]\(\)]'), '');
+      if (clean.isNotEmpty) {
+        return clean[0].toUpperCase() + clean.substring(1);
+      }
+    }
+
+    // 8. Safe ultimate fallback (never "Language learning artifact")
+    return selectedWord.isNotEmpty ? selectedWord : 'Item';
   }
 }

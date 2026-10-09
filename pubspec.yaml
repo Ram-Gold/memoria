@@ -47,7 +47,6 @@ dependencies:
   google_mlkit_image_labeling: ^0.16.1
   google_nav_bar: ^5.0.7
   google_fonts: ^6.2.1
-  flutter_grab: ^0.2.0
   image: ^4.10.1
   lucide_icons_flutter: ^3.1.24
   turnable_page: ^1.1.0
@@ -56,6 +55,9 @@ dependencies:
   world_flags: ^0.8.0
   flutter_brands: ^0.0.1
   shared_preferences: ^2.5.6
+  url_launcher: ^6.3.3
+  file_picker: ^13.1.0
+  flutter_gemma: ^1.11.4
 
 dev_dependencies:
   flutter_test:

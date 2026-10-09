@@ -285,27 +285,97 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
     final threshold = ref.watch(confidenceThresholdProvider);
     final confidentObjects = p.detectedObjects.where((o) => o.isConfident(threshold)).toList();
 
-    // Contextual English meaning:
-    String activeEnglishLabel = _selectedObject?.labelEn ?? '';
-    if (activeEnglishLabel.isEmpty) {
+    // Contextual English meaning with multi-stage foolproof resolution:
+    String activeEnglishLabel = '';
+
+    // 1. If an object is explicitly selected by user tap:
+    if (_selectedObject != null) {
+      final label = _selectedObject!.labelEn.trim();
+      if (label.isNotEmpty && label.toLowerCase() != 'object' && label.toLowerCase() != 'item') {
+        activeEnglishLabel = label;
+      } else {
+        // Try reverse lookup on selected object
+        final rev = LocalObjectLexicon.reverseLookup(
+          targetWord: _selectedObject!.targetWord,
+          transliteration: _selectedObject!.transliteration,
+          secondaryScript: _selectedObject!.secondaryScript,
+          langCode: p.languageCode,
+        );
+        if (rev != null && rev.labelEn.isNotEmpty) {
+          activeEnglishLabel = rev.labelEn;
+        }
+      }
+    }
+
+    // 2. Direct labelEn stored on the Polaroid model itself:
+    if (activeEnglishLabel.isEmpty && p.labelEn != null && p.labelEn!.trim().isNotEmpty && p.labelEn!.trim().toLowerCase() != 'object') {
+      activeEnglishLabel = p.labelEn!.trim();
+    }
+
+    // 3. Match against detectedObjects by selectedObjectId:
+    if (activeEnglishLabel.isEmpty && p.selectedObjectId.isNotEmpty) {
       for (final obj in p.detectedObjects) {
-        if (obj.targetWord == activeWord && obj.labelEn.isNotEmpty) {
-          activeEnglishLabel = obj.labelEn;
+        if (obj.id == p.selectedObjectId &&
+            obj.labelEn.trim().isNotEmpty &&
+            obj.labelEn.trim().toLowerCase() != 'object') {
+          activeEnglishLabel = obj.labelEn.trim();
           break;
         }
       }
     }
+
+    // 4. Match against detectedObjects by targetWord or transliteration:
     if (activeEnglishLabel.isEmpty) {
-      final lexiconMatch = LocalObjectLexicon.lookup(
+      for (final obj in p.detectedObjects) {
+        final matchesWord = obj.targetWord.trim().toLowerCase() == activeWord.trim().toLowerCase();
+        final matchesTranslit = activeTranslit.isNotEmpty &&
+            obj.transliteration?.trim().toLowerCase() == activeTranslit.trim().toLowerCase();
+        if ((matchesWord || matchesTranslit) &&
+            obj.labelEn.trim().isNotEmpty &&
+            obj.labelEn.trim().toLowerCase() != 'object') {
+          activeEnglishLabel = obj.labelEn.trim();
+          break;
+        }
+      }
+    }
+
+    // 5. Offline reverse dictionary lookup by target word, transliteration, or secondary script:
+    if (activeEnglishLabel.isEmpty) {
+      final rev = LocalObjectLexicon.reverseLookup(
+        targetWord: activeWord,
+        transliteration: activeTranslit,
+        secondaryScript: activeSecondary,
+        langCode: p.languageCode,
+      );
+      if (rev != null && rev.labelEn.isNotEmpty) {
+        activeEnglishLabel = rev.labelEn;
+      }
+    }
+
+    // 6. Direct lookup (in case activeWord is already English):
+    if (activeEnglishLabel.isEmpty) {
+      final match = LocalObjectLexicon.lookup(
         className: activeWord,
         langCode: p.languageCode,
       );
-      if (lexiconMatch != null) {
-        activeEnglishLabel = lexiconMatch.labelEn;
+      if (match != null && match.labelEn.isNotEmpty) {
+        activeEnglishLabel = match.labelEn;
       }
     }
-    if (activeEnglishLabel.isEmpty && _selectedObject == null && p.detectedObjects.isNotEmpty) {
-      activeEnglishLabel = p.detectedObjects.first.labelEn;
+
+    // 7. Check if any detected object has a valid label:
+    if (activeEnglishLabel.isEmpty && p.detectedObjects.isNotEmpty) {
+      for (final obj in p.detectedObjects) {
+        if (obj.labelEn.trim().isNotEmpty && obj.labelEn.trim().toLowerCase() != 'object') {
+          activeEnglishLabel = obj.labelEn.trim();
+          break;
+        }
+      }
+    }
+
+    // 8. Use Polaroid's resolvedEnglishLabel fallback
+    if (activeEnglishLabel.isEmpty) {
+      activeEnglishLabel = p.resolvedEnglishLabel;
     }
 
     // Format date string
@@ -630,7 +700,7 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
                               child: Text(
                                 activeEnglishLabel.isNotEmpty
                                     ? activeEnglishLabel
-                                    : 'Language learning artifact',
+                                    : (p.resolvedEnglishLabel.isNotEmpty ? p.resolvedEnglishLabel : 'Item'),
                                 style: MemoriaTokens.headlineSm(
                                   color: MemoriaTokens.onSurface,
                                 ).copyWith(
@@ -736,7 +806,7 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
             _buildExampleSentencesSection(
               languageCode: p.languageCode,
               word: activeWord,
-              labelEn: _selectedObject?.labelEn ?? p.selectedWord,
+              labelEn: activeEnglishLabel.isNotEmpty ? activeEnglishLabel : p.resolvedEnglishLabel,
               secondaryScript: activeSecondary,
               transliteration: activeTranslit,
             ),

@@ -1,3 +1,5 @@
+import '../../data/services/local_object_lexicon.dart';
+
 class DetectedObject {
   final String id;
   final String polaroidId;
@@ -74,15 +76,73 @@ class DetectedObject {
       }
     }
 
+    // Flexible extraction of English label from common LLM output key variations
+    String extractedLabelEn = (json['label_en'] ??
+            json['english_label'] ??
+            json['english_meaning'] ??
+            json['english'] ??
+            json['meaning'] ??
+            json['label'] ??
+            json['translation'] ??
+            json['name'])
+        ?.toString()
+        .trim() ??
+        '';
+
+    final targetWord = (json['target_word'] ??
+            json['targetWord'] ??
+            json['word'] ??
+            json['target'])
+        ?.toString()
+        .trim() ??
+        '';
+
+    final transliteration = (json['transliteration'] ??
+            json['romaji'] ??
+            json['pinyin'] ??
+            json['pronunciation'] ??
+            json['phonetic'])
+        ?.toString()
+        .trim();
+
+    final secondaryScript = (json['secondary_script'] ??
+            json['secondaryScript'] ??
+            json['script'] ??
+            json['kana'] ??
+            json['furigana'] ??
+            json['reading'])
+        ?.toString()
+        .trim();
+
+    // If label_en is missing, empty, or generic ('object', 'item', 'unknown'),
+    // perform reverse lookup in LocalObjectLexicon
+    if (extractedLabelEn.isEmpty ||
+        extractedLabelEn.toLowerCase() == 'object' ||
+        extractedLabelEn.toLowerCase() == 'item' ||
+        extractedLabelEn.toLowerCase() == 'unknown') {
+      final rev = LocalObjectLexicon.reverseLookup(
+        targetWord: targetWord,
+        transliteration: transliteration,
+        secondaryScript: secondaryScript,
+      );
+      if (rev != null && rev.labelEn.isNotEmpty) {
+        extractedLabelEn = rev.labelEn;
+      }
+    }
+
+    if (extractedLabelEn.isEmpty) {
+      extractedLabelEn = 'object';
+    }
+
     return DetectedObject(
       id: json['id']?.toString() ?? 'obj_0',
       polaroidId: polaroidId,
-      labelEn: json['label_en']?.toString() ?? 'object',
-      targetWord: json['target_word']?.toString() ?? '',
-      secondaryScript: json['secondary_script']?.toString(),
-      transliteration: json['transliteration']?.toString(),
-      partOfSpeech: json['part_of_speech']?.toString() ?? 'Noun',
-      difficultyLevel: json['difficulty_level']?.toString() ?? 'A1',
+      labelEn: extractedLabelEn,
+      targetWord: targetWord,
+      secondaryScript: secondaryScript,
+      transliteration: transliteration,
+      partOfSpeech: json['part_of_speech']?.toString() ?? json['pos']?.toString() ?? 'Noun',
+      difficultyLevel: json['difficulty_level']?.toString() ?? json['level']?.toString() ?? 'A1',
       confidence: parsedConfidence.clamp(0.0, 1.0),
       box: parsedBox,
     );

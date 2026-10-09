@@ -129,7 +129,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               iconSize: 20,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              width: 24,
+                              height: 24,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           Text(
                             _formatMonthYear(_currentMonth),
                             style: MemoriaTokens.headlineMd(),

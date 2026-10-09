@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -34,6 +34,7 @@ class DatabaseHelper {
         language_code TEXT NOT NULL,
         selected_object_id TEXT,
         selected_word TEXT NOT NULL,
+        label_en TEXT,
         secondary_script TEXT,
         transliteration TEXT,
         part_of_speech TEXT,
@@ -77,11 +78,17 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE memoria_detected_objects ADD COLUMN confidence REAL DEFAULT 1.0');
       } catch (_) {}
     }
+    if (oldVersion < 4) {
+      try {
+        await db.execute('ALTER TABLE memoria_polaroids ADD COLUMN label_en TEXT');
+      } catch (_) {}
+    }
   }
 
   Future<void> _createIndexes(Database db) async {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_polaroids_lang_created ON memoria_polaroids (language_code, created_at DESC)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_polaroids_selected_word ON memoria_polaroids (selected_word)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_polaroids_label_en ON memoria_polaroids (label_en)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_polaroids_favorite ON memoria_polaroids (is_favorite)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_objects_polaroid_id ON memoria_detected_objects (polaroid_id)');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_objects_label_en ON memoria_detected_objects (label_en)');

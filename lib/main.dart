@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_grab/flutter_grab.dart';
 import 'core/theme/memoria_theme.dart';
 import 'app/router.dart';
 
@@ -12,6 +12,12 @@ Future<void> main() async {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     debugPrint('Could not load .env file (using mock fallback): $e');
+  }
+
+  try {
+    await FlutterGemma.initialize();
+  } catch (e) {
+    debugPrint('FlutterGemma initialization deferred / notice: $e');
   }
 
   runApp(
@@ -31,7 +37,6 @@ class MemoriaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: MemoriaTheme.lightTheme,
       routerConfig: appRouter,
-      builder: FlutterGrab.builder,
     );
   }
 }

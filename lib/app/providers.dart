@@ -1,12 +1,17 @@
 import 'package:camera/camera.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/ai/ai_settings_provider.dart';
+import '../core/constants/ai_providers.dart';
 import '../core/languages/language_profile.dart';
 import '../core/rag/rag_service.dart';
 import '../data/repositories/polaroid_repository.dart';
+import '../data/services/claude_vision_service.dart';
+import '../data/services/gemini_vision_service.dart';
 import '../data/services/local_gemma_vision_service.dart';
 import '../data/services/local_mlkit_vision_service.dart';
+import '../data/services/local_vlm_model_manager.dart';
 import '../data/services/mistral_vision_service.dart';
+import '../data/services/openai_vision_service.dart';
 import '../domain/models/detected_object.dart';
 import '../domain/models/polaroid.dart';
 import '../domain/services/vision_service.dart';
@@ -65,24 +70,10 @@ final selectedPolaroidFormatProvider = Provider<PolaroidFormat>((ref) {
   return PolaroidFormat.fromId(ratioId);
 });
 
-enum AiVisionMode {
-  cloudMistral,
-  localOnDevice,
-}
-
-String _getMistralApiKey() {
-  try {
-    if (dotenv.isInitialized) {
-      return dotenv.env['MISTRAL_API_KEY'] ?? '';
-    }
-  } catch (_) {}
-  return '';
-}
-
-final aiVisionModeProvider = StateProvider<AiVisionMode>((ref) {
-  // Default to cloudMistral if key is available, else localOnDevice
-  final apiKey = _getMistralApiKey();
-  return apiKey.trim().isNotEmpty ? AiVisionMode.cloudMistral : AiVisionMode.localOnDevice;
+// Backward compatibility alias for legacy call sites
+typedef AiVisionMode = AiEngineMode;
+final aiVisionModeProvider = Provider<AiEngineMode>((ref) {
+  return ref.watch(aiEngineModeProvider);
 });
 
 final localMlKitVisionServiceProvider = Provider<LocalMlKitVisionService>((ref) {
@@ -93,18 +84,33 @@ final localGemmaVisionServiceProvider = Provider<LocalGemmaVisionService>((ref) 
   return LocalGemmaVisionService();
 });
 
+final localVlmModelManagerProvider = ChangeNotifierProvider<LocalVlmModelManager>((ref) {
+  final manager = LocalVlmModelManager();
+  manager.initialize();
+  return manager;
+});
+
 final visionServiceProvider = Provider<VisionService>((ref) {
-  final mode = ref.watch(aiVisionModeProvider);
-  if (mode == AiVisionMode.localOnDevice) {
-    // Highly accurate real-pixel on-device computer vision (<50ms, zero model downloads)
-    return LocalMlKitVisionService();
+  final mode = ref.watch(aiEngineModeProvider);
+  if (mode == AiEngineMode.local) {
+    // Dual-tier on-device vision AI (PaliGemma 3B VLM + high-speed ML Kit computer vision)
+    return ref.watch(localGemmaVisionServiceProvider);
   }
 
-  final apiKey = _getMistralApiKey();
-  if (apiKey.trim().isNotEmpty) {
-    return MistralVisionService(apiKey: apiKey);
+  final selectedProvider = ref.watch(selectedCloudProviderProvider);
+  final apiKeysNotifier = ref.watch(aiApiKeysProvider.notifier);
+  final key = apiKeysNotifier.getKey(selectedProvider);
+
+  switch (selectedProvider) {
+    case AiCloudProvider.mistral:
+      return MistralVisionService(apiKey: key);
+    case AiCloudProvider.openai:
+      return OpenAiVisionService(apiKey: key);
+    case AiCloudProvider.gemini:
+      return GeminiVisionService(apiKey: key);
+    case AiCloudProvider.claude:
+      return ClaudeVisionService(apiKey: key);
   }
-  return LocalMlKitVisionService();
 });
 
 final polaroidRepositoryProvider = Provider<PolaroidRepository>((ref) {

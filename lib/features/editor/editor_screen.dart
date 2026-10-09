@@ -10,6 +10,7 @@ import '../../core/services/app_tts_service.dart';
 import '../../core/theme/memoria_tokens.dart';
 import '../../core/widgets/rubber_stamp.dart';
 import '../../core/widgets/washi_tape.dart';
+import '../../data/services/local_object_lexicon.dart';
 import '../../domain/models/analysis_result.dart';
 import '../../domain/models/detected_object.dart';
 import '../../domain/models/polaroid.dart';
@@ -90,19 +91,53 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           .where((o) => o.isConfident(threshold))
           .toList();
 
+      // Ensure English label is fully resolved for the selected object
+      String labelEn = _selectedObject.labelEn.trim();
+      if (labelEn.isEmpty || labelEn.toLowerCase() == 'object' || labelEn.toLowerCase() == 'item') {
+        final rev = LocalObjectLexicon.reverseLookup(
+          targetWord: _selectedObject.targetWord,
+          transliteration: _selectedObject.transliteration,
+          secondaryScript: _selectedObject.secondaryScript,
+          langCode: language.code,
+        );
+        if (rev != null && rev.labelEn.isNotEmpty) {
+          labelEn = rev.labelEn;
+        }
+      }
+
+      final resolvedSelectedObject = _selectedObject.copyWith(
+        labelEn: labelEn.isNotEmpty ? labelEn : _selectedObject.labelEn,
+      );
+
+      // Guarantee the focal object selected by the user is ALWAYS preserved,
+      // even if its individual confidence score is below the threshold slider.
+      final objectsToSave = <DetectedObject>[];
+      final existsInConfident = confidentObjects.any((o) => o.id == resolvedSelectedObject.id);
+      if (!existsInConfident) {
+        objectsToSave.add(resolvedSelectedObject);
+      }
+      for (final obj in confidentObjects) {
+        if (obj.id == resolvedSelectedObject.id) {
+          objectsToSave.add(resolvedSelectedObject);
+        } else {
+          objectsToSave.add(obj);
+        }
+      }
+
       final polaroid = Polaroid(
         id: polId,
         imagePath: widget.imagePath,
         outputImagePath: widget.imagePath,
         languageCode: language.code,
-        selectedObjectId: _selectedObject.id,
-        selectedWord: _selectedObject.targetWord,
-        secondaryScript: _selectedObject.secondaryScript,
-        transliteration: _selectedObject.transliteration,
-        partOfSpeech: _selectedObject.partOfSpeech,
-        difficultyLevel: _selectedObject.difficultyLevel,
+        selectedObjectId: resolvedSelectedObject.id,
+        selectedWord: resolvedSelectedObject.targetWord,
+        labelEn: labelEn.isNotEmpty ? labelEn : resolvedSelectedObject.labelEn,
+        secondaryScript: resolvedSelectedObject.secondaryScript,
+        transliteration: resolvedSelectedObject.transliteration,
+        partOfSpeech: resolvedSelectedObject.partOfSpeech,
+        difficultyLevel: resolvedSelectedObject.difficultyLevel,
         createdAt: DateTime.now(),
-        detectedObjects: confidentObjects,
+        detectedObjects: objectsToSave,
         isFavorite: _isFavorite,
       );
 
