@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/theme/memoria_tokens.dart';
+import '../../core/widgets/language_flag_icon.dart';
 import 'language_picker_sheet.dart';
 
 class CameraScreen extends ConsumerStatefulWidget {
@@ -257,46 +259,15 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
     required Size screenSize,
   }) async {
     try {
-      final file = File(sourcePath);
-      final rawBytes = await file.readAsBytes();
-      img.Image? image = img.decodeImage(rawBytes);
-      if (image == null) return sourcePath;
-
-      // Bake EXIF orientation so pixels match visual screen orientation
-      image = img.bakeOrientation(image);
-
-      final screenW = screenSize.width;
-      final screenH = screenSize.height;
-
-      final imgW = image.width.toDouble();
-      final imgH = image.height.toDouble();
-
-      // Camera preview on screen uses BoxFit.cover
-      final scale = max(screenW / imgW, screenH / imgH);
-      final renderedW = imgW * scale;
-      final renderedH = imgH * scale;
-
-      final offsetX = (renderedW - screenW) / 2.0;
-      final offsetY = (renderedH - screenH) / 2.0;
-
-      // Map screen aperture bounds to image coordinates accurately
-      final cropX = ((apertureOnScreen.left + offsetX) / scale).round().clamp(0, image.width - 1);
-      final cropY = ((apertureOnScreen.top + offsetY) / scale).round().clamp(0, image.height - 1);
-      final cropW = (apertureOnScreen.width / scale).round().clamp(1, image.width - cropX);
-      final cropH = (apertureOnScreen.height / scale).round().clamp(1, image.height - cropY);
-
-      final cropped = img.copyCrop(
-        image,
-        x: cropX,
-        y: cropY,
-        width: cropW,
-        height: cropH,
-      );
-
-      final uniqueId = DateTime.now().millisecondsSinceEpoch;
-      final croppedPath = sourcePath.replaceAll('.jpg', '_cropped_$uniqueId.jpg');
-      final croppedBytes = img.encodeJpg(cropped, quality: 92);
-      await File(croppedPath).writeAsBytes(croppedBytes);
+      final croppedPath = await compute(_cropImageTask, _CropParams(
+        sourcePath: sourcePath,
+        left: apertureOnScreen.left,
+        top: apertureOnScreen.top,
+        width: apertureOnScreen.width,
+        height: apertureOnScreen.height,
+        screenWidth: screenSize.width,
+        screenHeight: screenSize.height,
+      ));
 
       // Invalidate image cache so consecutive photos are never stale
       PaintingBinding.instance.imageCache.clear();
@@ -331,13 +302,9 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
     try {
       setState(() {
         _isCapturing = true;
-        _isFlashing = true;
         _hasCaptured = true; // Turn window into dark emulsion with "Shake to develop..."
       });
       HapticFeedback.heavyImpact();
-
-      // Trigger fast ease-out xenon flash
-      _flashController.forward(from: 0.0);
 
       // Measure exact aperture rectangle on screen in global coordinates BEFORE animation begins
       final box = _windowKey.currentContext?.findRenderObject() as RenderBox?;
@@ -356,37 +323,32 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
         apertureOnScreen = Rect.fromLTWH(left, top, apertureW, apertureH);
       }
 
-      // Start mechanical kick & downward ejection animation
+      // Synchronize xenon screen burst: Trigger when exposure begins
+      setState(() => _isFlashing = true);
+      _flashController.forward(from: 0.0);
+
+      // Start capture immediately
+      final captureFuture = _cameraController!.takePicture();
+
+      // Trigger mechanical ejection animation concurrently with hardware exposure
       final ejectionFuture = _ejectController.forward(from: 0.0);
 
-      String imagePath;
+      final XFile photo = await captureFuture;
+      final String rawPath = photo.path;
 
-      if (_cameraController != null && _cameraController!.value.isInitialized) {
-        final XFile photo = await _cameraController!.takePicture();
-        imagePath = photo.path;
+      // Run image decoding and cropping in background isolate concurrently
+      final cropFuture = _cropToAperture(
+        sourcePath: rawPath,
+        apertureOnScreen: apertureOnScreen,
+        screenSize: screenSize,
+      );
 
-        // Crop what is framed inside the polaroid aperture window
-        imagePath = await _cropToAperture(
-          sourcePath: imagePath,
-          apertureOnScreen: apertureOnScreen,
-          screenSize: screenSize,
-        );
-      } else {
-        // Fallback: Pick image from gallery if camera unavailable
-        final picker = ImagePicker();
-        final picked = await picker.pickImage(source: ImageSource.gallery);
-        if (picked == null) {
-          _resetCaptureState();
-          return;
-        }
-        imagePath = picked.path;
-      }
-
-      // Ensure the mechanical ejection animation completes all the way off screen
+      // Wait for both mechanical ejection and cropping to finish
       await ejectionFuture;
+      final String imagePath = await cropFuture;
 
       if (mounted) {
-        // Hand off seamlessly to the develop screen
+        // Hand off seamlessly to the develop screen with zero UI hitch
         final pushFuture = context.push('/develop', extra: imagePath);
 
         // Instant Clean Reset behind the transition:
@@ -692,9 +654,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                             shape: BoxShape.circle,
                           ),
                           child: Center(
-                            child: Text(
-                              activeLanguage.flagEmoji,
-                              style: const TextStyle(fontSize: 22),
+                            child: LanguageFlagIcon(
+                              language: activeLanguage,
+                              width: 26,
+                              borderRadius: 4.0,
                             ),
                           ),
                         ),
@@ -1036,6 +999,76 @@ class PolaroidCardHollowPainter extends CustomPainter {
     return oldDelegate.apertureRect != apertureRect ||
         oldDelegate.cardColor != cardColor ||
         oldDelegate.borderRadius != borderRadius;
+  }
+}
+
+/// Parameters for background image cropping compute task
+class _CropParams {
+  final String sourcePath;
+  final double left;
+  final double top;
+  final double width;
+  final double height;
+  final double screenWidth;
+  final double screenHeight;
+
+  const _CropParams({
+    required this.sourcePath,
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
+    required this.screenWidth,
+    required this.screenHeight,
+  });
+}
+
+/// Standalone top-level isolate task that performs image decoding, orientation baking,
+/// and cropping off the UI thread to keep the 60fps viewfinder and animation completely fluid.
+Future<String> _cropImageTask(_CropParams params) async {
+  try {
+    final file = File(params.sourcePath);
+    final rawBytes = await file.readAsBytes();
+    img.Image? image = img.decodeImage(rawBytes);
+    if (image == null) return params.sourcePath;
+
+    // Bake EXIF orientation so pixels match visual screen orientation
+    image = img.bakeOrientation(image);
+
+    final imgW = image.width.toDouble();
+    final imgH = image.height.toDouble();
+
+    // Camera preview on screen uses BoxFit.cover
+    final scale = max(params.screenWidth / imgW, params.screenHeight / imgH);
+    final renderedW = imgW * scale;
+    final renderedH = imgH * scale;
+
+    final offsetX = (renderedW - params.screenWidth) / 2.0;
+    final offsetY = (renderedH - params.screenHeight) / 2.0;
+
+    // Map screen aperture bounds to image coordinates accurately
+    final cropX = ((params.left + offsetX) / scale).round().clamp(0, image.width - 1);
+    final cropY = ((params.top + offsetY) / scale).round().clamp(0, image.height - 1);
+    final cropW = (params.width / scale).round().clamp(1, image.width - cropX);
+    final cropH = (params.height / scale).round().clamp(1, image.height - cropY);
+
+    final cropped = img.copyCrop(
+      image,
+      x: cropX,
+      y: cropY,
+      width: cropW,
+      height: cropH,
+    );
+
+    final uniqueId = DateTime.now().millisecondsSinceEpoch;
+    final croppedPath = params.sourcePath.replaceAll('.jpg', '_cropped_$uniqueId.jpg');
+    final croppedBytes = img.encodeJpg(cropped, quality: 92);
+    await File(croppedPath).writeAsBytes(croppedBytes);
+
+    return croppedPath;
+  } catch (e) {
+    debugPrint('Background cropping error: $e');
+    return params.sourcePath;
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/theme/memoria_tokens.dart';
+import '../../core/widgets/language_flag_icon.dart';
 
 class LanguagePickerSheet extends ConsumerWidget {
   const LanguagePickerSheet({super.key});
@@ -64,7 +65,11 @@ class LanguagePickerSheet extends ConsumerWidget {
                   ),
                   child: ListTile(
                     dense: true,
-                    leading: Text(lang.flagEmoji, style: const TextStyle(fontSize: 22)),
+                    leading: LanguageFlagIcon(
+                      language: lang,
+                      width: 28,
+                      borderRadius: 4.0,
+                    ),
                     title: Text(
                       '${lang.displayName} (${lang.englishName})',
                       style: MemoriaTokens.labelLg(
@@ -99,7 +104,11 @@ class LanguagePickerSheet extends ConsumerWidget {
                   ),
                   child: ListTile(
                     dense: true,
-                    leading: Text(lang.flagEmoji, style: const TextStyle(fontSize: 22)),
+                    leading: LanguageFlagIcon(
+                      language: lang,
+                      width: 28,
+                      borderRadius: 4.0,
+                    ),
                     title: Text(
                       '${lang.displayName} (${lang.englishName})',
                       style: MemoriaTokens.labelLg(

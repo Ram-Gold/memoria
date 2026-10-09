@@ -14,6 +14,7 @@ import '../../core/languages/language_profile.dart';
 import '../../core/languages/sentence_generator.dart';
 import '../../core/services/app_tts_service.dart';
 import '../../core/theme/memoria_tokens.dart';
+import '../../core/widgets/language_flag_icon.dart';
 import '../../core/widgets/rubber_stamp.dart';
 import '../../core/widgets/washi_tape.dart';
 import '../../data/services/local_object_lexicon.dart';
@@ -480,8 +481,12 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(lang.flagEmoji, style: const TextStyle(fontSize: 12)),
-                            const SizedBox(width: 5),
+                            LanguageFlagIcon(
+                              language: lang,
+                              width: 16,
+                              borderRadius: 2.0,
+                            ),
+                            const SizedBox(width: 6),
                             Text(
                               lang.displayName,
                               style: MemoriaTokens.labelSm(color: MemoriaTokens.secondary),

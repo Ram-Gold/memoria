@@ -9,6 +9,7 @@ import 'package:turnable_page/turnable_page.dart';
 import '../../app/providers.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/theme/memoria_tokens.dart';
+import '../../core/widgets/language_flag_icon.dart';
 import '../../core/widgets/polaroid_frame.dart';
 import '../../domain/models/polaroid.dart';
 
@@ -53,8 +54,9 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
               child: Column(
                 children: [
-                  // View Switcher Capsule (Turnable Journal vs Collections)
+                  // View Switcher Capsule (Journal vs Collections) with springy gliding pill
                   Container(
+                    height: 38,
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       color: MemoriaTokens.surfaceContainer,
@@ -68,93 +70,103 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                         ),
                       ],
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _viewMode = 0);
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 7),
-                              decoration: BoxDecoration(
-                                color: _viewMode == 0 ? Colors.white : Colors.transparent,
-                                borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
-                                boxShadow: _viewMode == 0
-                                    ? const [
-                                        BoxShadow(
-                                          color: Color(0x14000000),
-                                          blurRadius: 4,
-                                          offset: Offset(0, 1),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    LucideIcons.bookOpen,
-                                    size: 15,
-                                    color: _viewMode == 0 ? MemoriaTokens.primary : MemoriaTokens.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Turnable Journal',
-                                    style: MemoriaTokens.labelSm(
-                                      color: _viewMode == 0 ? MemoriaTokens.primaryDark : MemoriaTokens.onSurfaceVariant,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final tabWidth = constraints.maxWidth / 2;
+                        return Stack(
+                          children: [
+                            // ── Gliding Springy Pill Indicator ──
+                            AnimatedAlign(
+                              duration: const Duration(milliseconds: 320),
+                              curve: Curves.easeOutBack,
+                              alignment: _viewMode == 0 ? Alignment.centerLeft : Alignment.centerRight,
+                              child: Container(
+                                width: tabWidth,
+                                height: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x18000000),
+                                      blurRadius: 5,
+                                      offset: Offset(0, 1.5),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _viewMode = 1);
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 7),
-                              decoration: BoxDecoration(
-                                color: _viewMode == 1 ? Colors.white : Colors.transparent,
-                                borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
-                                boxShadow: _viewMode == 1
-                                    ? const [
-                                        BoxShadow(
-                                          color: Color(0x14000000),
-                                          blurRadius: 4,
-                                          offset: Offset(0, 1),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    LucideIcons.folderHeart,
-                                    size: 15,
-                                    color: _viewMode == 1 ? MemoriaTokens.primary : MemoriaTokens.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Collections',
-                                    style: MemoriaTokens.labelSm(
-                                      color: _viewMode == 1 ? MemoriaTokens.primaryDark : MemoriaTokens.onSurfaceVariant,
+
+                            // ── Tab Labels Row ──
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () {
+                                      if (_viewMode != 0) {
+                                        HapticFeedback.selectionClick();
+                                        setState(() => _viewMode = 0);
+                                      }
+                                    },
+                                    child: Center(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            LucideIcons.bookOpen,
+                                            size: 15,
+                                            color: _viewMode == 0 ? MemoriaTokens.primary : MemoriaTokens.onSurfaceVariant,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          AnimatedDefaultTextStyle(
+                                            duration: const Duration(milliseconds: 200),
+                                            style: MemoriaTokens.labelSm(
+                                              color: _viewMode == 0 ? MemoriaTokens.primaryDark : MemoriaTokens.onSurfaceVariant,
+                                            ),
+                                            child: const Text('Journal'),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                                Expanded(
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () {
+                                      if (_viewMode != 1) {
+                                        HapticFeedback.selectionClick();
+                                        setState(() => _viewMode = 1);
+                                      }
+                                    },
+                                    child: Center(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            LucideIcons.folderHeart,
+                                            size: 15,
+                                            color: _viewMode == 1 ? MemoriaTokens.primary : MemoriaTokens.onSurfaceVariant,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          AnimatedDefaultTextStyle(
+                                            duration: const Duration(milliseconds: 200),
+                                            style: MemoriaTokens.labelSm(
+                                              color: _viewMode == 1 ? MemoriaTokens.primaryDark : MemoriaTokens.onSurfaceVariant,
+                                            ),
+                                            child: const Text('Collections'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        );
+                      },
                     ),
                   ),
 
@@ -622,8 +634,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
 
               return GestureDetector(
                 onTap: () {
-                  ref.read(scrapbookSearchQueryProvider.notifier).state = entry.key;
-                  setState(() => _viewMode = 0);
+                  context.push('/collection/${entry.key}');
                 },
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 10),
@@ -663,8 +674,12 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                           children: [
                             Row(
                               children: [
-                                Text(lang.flagEmoji, style: const TextStyle(fontSize: 15)),
-                                const SizedBox(width: 6),
+                                LanguageFlagIcon(
+                                  language: lang,
+                                  width: 20,
+                                  borderRadius: 3.0,
+                                ),
+                                const SizedBox(width: 8),
                                 Text(
                                   '${lang.displayName} Collection',
                                   style: MemoriaTokens.headlineSm().copyWith(fontSize: 14),

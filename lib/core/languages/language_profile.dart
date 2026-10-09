@@ -1,3 +1,4 @@
+import 'package:world_flags/world_flags.dart';
 import '../../domain/models/detected_object.dart';
 
 enum ChinLayoutStrategy {
@@ -16,6 +17,7 @@ class LanguageProfile {
   final String displayName;
   final String englishName;
   final String flagEmoji;
+  final WorldCountry? country;
   final bool isFocusLanguage;
   final String primaryFontFamily;
   final List<String> fontFallbacks;
@@ -29,6 +31,7 @@ class LanguageProfile {
     required this.displayName,
     required this.englishName,
     required this.flagEmoji,
+    this.country,
     this.isFocusLanguage = false,
     required this.primaryFontFamily,
     this.fontFallbacks = const [],
@@ -46,6 +49,7 @@ class LanguageRegistry {
     displayName: '日本語',
     englishName: 'Japanese',
     flagEmoji: '🇯🇵',
+    country: CountryJpn(),
     isFocusLanguage: true,
     primaryFontFamily: 'Yusei Magic',
     fontFallbacks: ['Noto Sans JP', 'sans-serif'],
@@ -66,6 +70,7 @@ class LanguageRegistry {
     displayName: 'Filipino (Baybayin)',
     englishName: 'Filipino',
     flagEmoji: '🇵🇭',
+    country: CountryPhl(),
     isFocusLanguage: true,
     primaryFontFamily: 'Baybayin Sisil',
     fontFallbacks: ['Noto Sans Tagalog', 'sans-serif'],
@@ -73,7 +78,7 @@ class LanguageRegistry {
     promptInstructions:
         'Target Language: Filipino / Tagalog. '
         'For each detected object: '
-        'target_word must be the authentic Baybayin Unicode script characters (Unicode range U+1700 to U+171F, e.g. ᜀᜃ᜔ᜎᜆ᜔ for aklat, ᜉᜓᜐ for pusa, ᜋᜒᜐ for mesa). '
+        'target_word must be the authentic Baybayin Unicode script characters (Unicode range U+1700 to U+171F, e.g. ᜀᜃᜎᜆ᜔ for aklat, ᜉᜓᜐ for pusa, ᜋᜒᜐ for mesa). '
         'secondary_script must be the modern Latin Tagalog word (e.g. aklat, pusa, mesa). '
         'transliteration must be phonetic pronunciation guide with hyphenated syllables (e.g. [ak-lat], [pu-sa], [me-sa]). '
         'difficulty_level must be CEFR A1 to B2 (favor A1/A2 for common items). '
@@ -87,6 +92,7 @@ class LanguageRegistry {
     displayName: 'Español',
     englishName: 'Spanish',
     flagEmoji: '🇪🇸',
+    country: CountryEsp(),
     primaryFontFamily: 'Caveat',
     chinLayout: ChinLayoutStrategy.standardLatin,
     promptInstructions:
@@ -99,6 +105,7 @@ class LanguageRegistry {
     displayName: 'Français',
     englishName: 'French',
     flagEmoji: '🇫🇷',
+    country: CountryFra(),
     primaryFontFamily: 'Caveat',
     chinLayout: ChinLayoutStrategy.standardLatin,
     promptInstructions:
@@ -111,6 +118,7 @@ class LanguageRegistry {
     displayName: 'Deutsch',
     englishName: 'German',
     flagEmoji: '🇩🇪',
+    country: CountryDeu(),
     primaryFontFamily: 'Caveat',
     chinLayout: ChinLayoutStrategy.standardLatin,
     promptInstructions:
@@ -123,6 +131,7 @@ class LanguageRegistry {
     displayName: '中文',
     englishName: 'Mandarin Chinese',
     flagEmoji: '🇨🇳',
+    country: CountryChn(),
     primaryFontFamily: 'Noto Sans SC',
     chinLayout: ChinLayoutStrategy.kanjiFirst,
     promptInstructions:
@@ -152,11 +161,13 @@ class LanguageRegistry {
   }
 
   static LanguageProfile createDynamicProfile(String codeOrName) {
+    final country = WorldCountry.maybeFromAnyCode(codeOrName);
     return LanguageProfile(
       code: codeOrName.toLowerCase(),
       displayName: codeOrName,
       englishName: codeOrName,
       flagEmoji: '🌐',
+      country: country,
       primaryFontFamily: 'Caveat',
       promptInstructions:
           'Target Language: $codeOrName. Provide target_word in native script, secondary_script in standard script or reading, and transliteration in Latin phonetic pronunciation.',

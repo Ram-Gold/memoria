@@ -3,6 +3,7 @@ import '../domain/models/analysis_result.dart';
 import '../domain/models/polaroid.dart';
 import '../features/develop/develop_screen.dart';
 import '../features/editor/editor_screen.dart';
+import '../features/gallery/collection_album_screen.dart';
 import '../features/gallery/polaroid_detail_screen.dart';
 import '../features/navigation/main_scaffold.dart';
 
@@ -44,6 +45,13 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final polaroid = state.extra as Polaroid;
         return PolaroidDetailScreen(polaroid: polaroid);
+      },
+    ),
+    GoRoute(
+      path: '/collection/:languageCode',
+      builder: (context, state) {
+        final languageCode = state.pathParameters['languageCode'] ?? 'ja';
+        return CollectionAlbumScreen(languageCode: languageCode);
       },
     ),
   ],
