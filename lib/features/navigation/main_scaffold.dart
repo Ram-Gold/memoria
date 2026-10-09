@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import '../../app/providers.dart';
+import '../../core/theme/memoria_tokens.dart';
 import '../calendar/calendar_screen.dart';
 import '../capture/camera_screen.dart';
 import '../gallery/scrapbook_screen.dart';
 
-class MainScaffold extends StatefulWidget {
+class MainScaffold extends ConsumerWidget {
   const MainScaffold({super.key});
-
-  @override
-  State<MainScaffold> createState() => _MainScaffoldState();
-}
-
-class _MainScaffoldState extends State<MainScaffold> {
-  int _currentIndex = 0;
 
   final List<Widget> _screens = const [
     CameraScreen(),
@@ -21,10 +17,12 @@ class _MainScaffoldState extends State<MainScaffold> {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentIndex = ref.watch(navigationIndexProvider);
+
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
+        index: currentIndex,
         children: _screens,
       ),
       bottomNavigationBar: SafeArea(
@@ -33,16 +31,13 @@ class _MainScaffoldState extends State<MainScaffold> {
           // Tactile Editorial Analog pill capsule
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1918), // Deep camera-body matte obsidian
-              borderRadius: BorderRadius.circular(40),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x59000000),
-                  blurRadius: 18,
-                  spreadRadius: 1,
-                  offset: Offset(0, 4),
-                ),
-              ],
+              color: MemoriaTokens.cameraObsidian, // Deep camera-body matte obsidian
+              borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+              boxShadow: MemoriaTokens.shadowCapsule,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1,
+              ),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
             child: GNav(
@@ -56,13 +51,11 @@ class _MainScaffoldState extends State<MainScaffold> {
               color: Colors.white60,
               activeColor: Colors.white,
               iconSize: 22,
-              tabBackgroundColor: const Color(0xFFE36528), // Terracotta orange accent
+              tabBackgroundColor: MemoriaTokens.primary, // Terracotta orange accent
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              selectedIndex: _currentIndex,
+              selectedIndex: currentIndex,
               onTabChange: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
+                ref.read(navigationIndexProvider.notifier).state = index;
               },
               tabs: const [
                 GButton(
@@ -85,4 +78,5 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 }
+
 

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../app/providers.dart';
 import '../../core/languages/language_profile.dart';
+import '../../core/theme/memoria_tokens.dart';
 import 'language_picker_sheet.dart';
 
 class CameraScreen extends ConsumerStatefulWidget {
@@ -98,7 +100,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
       setState(() => _isCapturing = true);
       HapticFeedback.heavyImpact();
 
-      // Trigger realistic visual xenon flash burst
+      // Trigger realistic xenon flash burst
       _triggerFlashEffect();
 
       String imagePath;
@@ -158,6 +160,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => const LanguagePickerSheet(),
     );
   }
@@ -171,172 +174,20 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
     };
     ref.read(cameraFlashModeProvider.notifier).state = next;
     HapticFeedback.selectionClick();
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          switch (next) {
-            FlashMode.auto => '⚡ Flash: Auto',
-            FlashMode.always => '⚡ Flash: Always On',
-            FlashMode.off => '🚫 Flash: Off',
-            _ => '⚡ Flash: Auto',
-          },
-        ),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
-  void _cyclePolaroidFormat() {
-    final current = ref.read(cameraAspectRatioProvider);
-    final next = switch (current) {
-      '1:1' => '3:4',
-      '3:4' => '4:3',
-      _ => '1:1',
-    };
-    ref.read(cameraAspectRatioProvider.notifier).state = next;
+  void _selectPolaroidFormat(PolaroidFormat f) {
+    ref.read(cameraAspectRatioProvider.notifier).state = f.id;
     HapticFeedback.selectionClick();
-    final format = PolaroidFormat.fromId(next);
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('📷 Polaroid Size: ${format.filmType} (${format.displayName}) · ${format.dimensions}'),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
-  void _showPolaroidFormatSheet() {
+  void _toggleAiMode() {
+    final current = ref.read(aiVisionModeProvider);
+    final next = current == AiVisionMode.cloudMistral
+        ? AiVisionMode.localOnDevice
+        : AiVisionMode.cloudMistral;
+    ref.read(aiVisionModeProvider.notifier).state = next;
     HapticFeedback.selectionClick();
-    final currentFormat = ref.read(selectedPolaroidFormatProvider);
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Select Polaroid Size & Film Format',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Choose the physical aspect ratio and film dimensions for your print.',
-                style: TextStyle(fontSize: 13, color: Colors.black54),
-              ),
-              const SizedBox(height: 16),
-              ...PolaroidFormat.values.map((f) {
-                final isSelected = f == currentFormat;
-                return ListTile(
-                  leading: Icon(
-                    switch (f) {
-                      PolaroidFormat.square => Icons.crop_square,
-                      PolaroidFormat.portrait => Icons.crop_portrait,
-                      PolaroidFormat.landscape => Icons.crop_landscape,
-                    },
-                    color: isSelected ? const Color(0xFFE36528) : Colors.black87,
-                    size: 28,
-                  ),
-                  title: Text(
-                    '${f.filmType} (${f.displayName})',
-                    style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: Text('Print dimensions: ${f.dimensions}'),
-                  trailing: isSelected
-                      ? const Icon(Icons.check_circle, color: Color(0xFFE36528))
-                      : null,
-                  onTap: () {
-                    ref.read(cameraAspectRatioProvider.notifier).state = f.id;
-                    Navigator.of(ctx).pop();
-                  },
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showAiVisionModeSheet() {
-    HapticFeedback.selectionClick();
-    final currentMode = ref.read(aiVisionModeProvider);
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'AI Vision Recognition Engine',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Memoria supports both Cloud Multimodal VLM and On-Device local intelligence.',
-                style: TextStyle(fontSize: 13, color: Colors.black54),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const CircleAvatar(
-                  backgroundColor: Color(0xFFFFECE5),
-                  child: Text('☁️', style: TextStyle(fontSize: 20)),
-                ),
-                title: const Text(
-                  'Cloud AI (Mistral VLM)',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: const Text('High contextual nuance, cultural vocabulary (Requires internet)'),
-                trailing: currentMode == AiVisionMode.cloudMistral
-                    ? const Icon(Icons.check_circle, color: Color(0xFFE36528))
-                    : null,
-                onTap: () {
-                  ref.read(aiVisionModeProvider.notifier).state = AiVisionMode.cloudMistral;
-                  Navigator.of(ctx).pop();
-                },
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: const CircleAvatar(
-                  backgroundColor: Color(0xFFE8F5E9),
-                  child: Text('⚡', style: TextStyle(fontSize: 20)),
-                ),
-                title: const Text(
-                  'Local AI (On-Device ML Kit)',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: const Text('100% offline, zero network latency (<50ms), private on-device'),
-                trailing: currentMode == AiVisionMode.localOnDevice
-                    ? const Icon(Icons.check_circle, color: Color(0xFF2E7D32))
-                    : null,
-                onTap: () {
-                  ref.read(aiVisionModeProvider.notifier).state = AiVisionMode.localOnDevice;
-                  Navigator.of(ctx).pop();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -345,6 +196,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
     final format = ref.watch(selectedPolaroidFormatProvider);
     final flashMode = ref.watch(cameraFlashModeProvider);
     final aiMode = ref.watch(aiVisionModeProvider);
+    final polaroidsAsync = ref.watch(polaroidsProvider);
 
     ref.listen<FlashMode>(cameraFlashModeProvider, (previous, next) async {
       if (_cameraController != null && _cameraController!.value.isInitialized) {
@@ -356,483 +208,526 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
       }
     });
 
-    return Stack(
-      children: [
-        SafeArea(
-          top: true,
-          bottom: false,
-          child: Column(
-            children: [
-              // 1. Top Analog Control Bar: Flash Mode, Polaroid Size, AI Mode
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Flash Mode Toggle Pill
-                    InkWell(
-                      onTap: _cycleFlashMode,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: flashMode == FlashMode.off
-                              ? Colors.grey.shade200
-                              : const Color(0xFFFFF3E0),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: flashMode == FlashMode.off
-                                ? Colors.grey.shade400
-                                : const Color(0xFFE36528),
-                            width: 1.2,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              switch (flashMode) {
-                                FlashMode.auto => Icons.flash_auto,
-                                FlashMode.always => Icons.flash_on,
-                                FlashMode.off => Icons.flash_off,
-                                _ => Icons.flash_auto,
-                              },
-                              size: 17,
-                              color: flashMode == FlashMode.off
-                                  ? Colors.grey.shade700
-                                  : const Color(0xFFE36528),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              switch (flashMode) {
-                                FlashMode.auto => 'AUTO',
-                                FlashMode.always => 'ON',
-                                FlashMode.off => 'OFF',
-                                _ => 'AUTO',
-                              },
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: flashMode == FlashMode.off
-                                    ? Colors.grey.shade700
-                                    : const Color(0xFFE36528),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+    final latestPolaroid = polaroidsAsync.valueOrNull?.isNotEmpty == true
+        ? polaroidsAsync.valueOrNull!.first
+        : null;
+    final totalCount = polaroidsAsync.valueOrNull?.length ?? 0;
 
-                    // Polaroid Size / Film Format Badge & Switcher
-                    InkWell(
-                      onTap: _showPolaroidFormatSheet,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.black26, width: 1.2),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x14000000),
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              switch (format) {
-                                PolaroidFormat.square => Icons.crop_square,
-                                PolaroidFormat.portrait => Icons.crop_portrait,
-                                PolaroidFormat.landscape => Icons.crop_landscape,
-                              },
-                              size: 16,
-                              color: Colors.black87,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${format.displayName} [${format.id}]',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                            const Icon(Icons.arrow_drop_down, size: 16, color: Colors.black54),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // AI Engine Mode Badge & Switcher
-                    InkWell(
-                      onTap: _showAiVisionModeSheet,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: aiMode == AiVisionMode.cloudMistral
-                              ? const Color(0xFFFFEFEA)
-                              : const Color(0xFFE8F5E9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: aiMode == AiVisionMode.cloudMistral
-                                ? const Color(0xFFE36528)
-                                : const Color(0xFF2E7D32),
-                            width: 1.2,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              aiMode == AiVisionMode.cloudMistral ? '☁️' : '⚡',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              aiMode == AiVisionMode.cloudMistral ? 'Cloud AI' : 'Local AI',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: aiMode == AiVisionMode.cloudMistral
-                                    ? const Color(0xFFD44B0F)
-                                    : const Color(0xFF1B5E20),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+    return Scaffold(
+      backgroundColor: MemoriaTokens.emulsionDark,
+      body: Stack(
+        children: [
+          // Background Atmospheric Vignette
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.1,
+                  colors: [
+                    Color(0xFF1E2024),
+                    Color(0xFF101114),
+                    Color(0xFF0A0B0D),
                   ],
                 ),
               ),
+            ),
+          ),
 
-              // 2. Language HUD Pill (Responsive & flex-safe)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: GestureDetector(
-                        onLongPress: _showLanguagePicker,
-                        child: ActionChip(
-                          avatar: Text(activeLanguage.flagEmoji, style: const TextStyle(fontSize: 16)),
-                          label: Text(
-                            '${activeLanguage.displayName} (Tap to swap)',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                          ),
-                          onPressed: _cycleLanguage,
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.black12),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.tune, size: 20),
-                      tooltip: 'All Languages',
-                      onPressed: _showLanguagePicker,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ],
-                ),
-              ),
-
-              // 3. Polaroid Viewfinder with Physical Bezel & Format Tag
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      // Determine max width and height for Polaroid card
-                      final double availW = constraints.maxWidth;
-                      final double availH = constraints.maxHeight;
-
-                      // Polaroid card geometry
-                      const double cardPaddingHoriz = 10.0;
-                      const double cardPaddingTop = 10.0;
-                      const double cardChinHeight = 36.0;
-
-                      // Available photo area inside card
-                      final double maxPhotoW = availW - (cardPaddingHoriz * 2);
-                      final double maxPhotoH = availH - cardPaddingTop - cardChinHeight - 10.0;
-
-                      // Fit photo aspect ratio within available space
-                      double photoW = maxPhotoW;
-                      double photoH = photoW / format.ratio;
-
-                      if (photoH > maxPhotoH) {
-                        photoH = maxPhotoH;
-                        photoW = photoH * format.ratio;
-                      }
-
-                      final double cardW = photoW + (cardPaddingHoriz * 2);
-                      final double cardH = photoH + cardPaddingTop + cardChinHeight;
-
-                      return Center(
+          // Main Viewfinder Content
+          SafeArea(
+            child: Column(
+              children: [
+                // 1. Top Rangefinder HUD Capsule Bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Flash Toggle Pill
+                      GestureDetector(
+                        onTap: _cycleFlashMode,
                         child: Container(
-                          width: cardW,
-                          height: cardH,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFBFBF9), // Real Polaroid warm white paper
-                            borderRadius: BorderRadius.circular(6),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x38000000),
-                                blurRadius: 14,
-                                spreadRadius: 1,
-                                offset: Offset(0, 5),
+                            color: Colors.black.withValues(alpha: 0.45),
+                            borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                switch (flashMode) {
+                                  FlashMode.auto => Icons.flash_auto,
+                                  FlashMode.always => Icons.flash_on,
+                                  FlashMode.off => Icons.flash_off,
+                                  _ => Icons.flash_auto,
+                                },
+                                size: 16,
+                                color: flashMode == FlashMode.off
+                                    ? Colors.white38
+                                    : const Color(0xFFFFB597),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                switch (flashMode) {
+                                  FlashMode.auto => 'AUTO',
+                                  FlashMode.always => 'ON',
+                                  FlashMode.off => 'OFF',
+                                  _ => 'AUTO',
+                                },
+                                style: MemoriaTokens.telemetryMono(
+                                  fontSize: 10,
+                                  color: flashMode == FlashMode.off
+                                      ? Colors.white38
+                                      : const Color(0xFFFFB597),
+                                ),
                               ),
                             ],
                           ),
-                          padding: const EdgeInsets.fromLTRB(
-                            cardPaddingHoriz,
-                            cardPaddingTop,
-                            cardPaddingHoriz,
-                            6,
+                        ),
+                      ),
+
+                      // AI Mode Toggle Pill
+                      GestureDetector(
+                        onTap: _toggleAiMode,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.45),
+                            borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                            border: Border.all(
+                              color: aiMode == AiVisionMode.cloudMistral
+                                  ? MemoriaTokens.primary.withValues(alpha: 0.5)
+                                  : Colors.green.withValues(alpha: 0.5),
+                            ),
                           ),
-                          child: Column(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Photo window
-                              SizedBox(
-                                width: photoW,
-                                height: photoH,
-                                child: Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(2),
-                                      child: _isCameraInitialized &&
-                                              _cameraController != null &&
-                                              _cameraController!.value.isInitialized
-                                          ? SizedBox.expand(
-                                              child: FittedBox(
-                                                fit: BoxFit.cover,
-                                                child: SizedBox(
-                                                  width: _cameraController!.value.previewSize?.height ?? photoW,
-                                                  height: _cameraController!.value.previewSize?.width ?? photoH,
-                                                  child: CameraPreview(_cameraController!),
-                                                ),
-                                              ),
-                                            )
-                                          : Container(
-                                              color: const Color(0xFF1E1E1E),
-                                              child: Center(
-                                                child: Column(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    const Icon(Icons.camera_alt_outlined, size: 40, color: Colors.white38),
-                                                    const SizedBox(height: 8),
-                                                    const Text(
-                                                      'Polaroid Viewfinder',
-                                                      style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      'Tap Shutter or Gallery to Learn',
-                                                      style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11),
-                                                    ),
-                                                  ],
+                              Text(aiMode == AiVisionMode.cloudMistral ? '☁️' : '⚡',
+                                  style: const TextStyle(fontSize: 12)),
+                              const SizedBox(width: 4),
+                              Text(
+                                aiMode == AiVisionMode.cloudMistral ? 'Mistral' : 'Local ML',
+                                style: MemoriaTokens.labelSm(
+                                  color: aiMode == AiVisionMode.cloudMistral
+                                      ? const Color(0xFFFFB597)
+                                      : const Color(0xFF81C784),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Language Selector Pill
+                      GestureDetector(
+                        onTap: _cycleLanguage,
+                        onLongPress: _showLanguagePicker,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.45),
+                            borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(activeLanguage.flagEmoji, style: const TextStyle(fontSize: 13)),
+                              const SizedBox(width: 4),
+                              Text(
+                                activeLanguage.code.toUpperCase(),
+                                style: MemoriaTokens.labelSm(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 2. The Physical Polaroid Frame IS the Camera HUD Viewfinder!
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 310,
+                              decoration: BoxDecoration(
+                                color: MemoriaTokens.polaroidCard,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x8A000000),
+                                    blurRadius: 36,
+                                    spreadRadius: 2,
+                                    offset: Offset(0, 14),
+                                  ),
+                                  BoxShadow(
+                                    color: Color(0x40000000),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Live Camera Inside the Emulsion Window
+                                  Container(
+                                    width: 286,
+                                    height: 286 / format.ratio,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black,
+                                      borderRadius: BorderRadius.circular(3),
+                                      border: Border.all(color: Colors.black.withValues(alpha: 0.3), width: 1),
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        if (_isCameraInitialized && _cameraController != null)
+                                          CameraPreview(_cameraController!)
+                                        else
+                                          Container(
+                                            color: const Color(0xFF181A1D),
+                                            child: const Center(
+                                              child: Icon(Icons.camera_alt_outlined, color: Colors.white24, size: 40),
+                                            ),
+                                          ),
+
+                                        // Subtle Optical Focus Reticle
+                                        Center(
+                                          child: Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1),
+                                              borderRadius: BorderRadius.circular(24),
+                                            ),
+                                            child: Center(
+                                              child: Container(
+                                                width: 4,
+                                                height: 4,
+                                                decoration: const BoxDecoration(
+                                                  color: MemoriaTokens.primary,
+                                                  shape: BoxShape.circle,
                                                 ),
                                               ),
                                             ),
-                                    ),
+                                          ),
+                                        ),
 
-                                    // Optical Viewfinder Reticle Corners
-                                    Positioned(
-                                      top: 8,
-                                      left: 8,
-                                      child: Text('⌜', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 20)),
+                                        // Film Emulsion Grain Scrim
+                                        IgnorePointer(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Colors.black.withValues(alpha: 0.15),
+                                                  Colors.transparent,
+                                                  Colors.black.withValues(alpha: 0.25),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    Positioned(
-                                      top: 8,
-                                      right: 8,
-                                      child: Text('⌝', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 20)),
+                                  ),
+
+                                  // Authentic Polaroid Chin Margin
+                                  Container(
+                                    height: 44,
+                                    alignment: Alignment.center,
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            'MEMORIA • ${format.filmType.toUpperCase()}',
+                                            overflow: TextOverflow.ellipsis,
+                                            style: MemoriaTokens.telemetryMono(
+                                              fontSize: 8.5,
+                                              color: Colors.black.withValues(alpha: 0.45),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          format.dimensions,
+                                          style: MemoriaTokens.telemetryMono(
+                                            fontSize: 8.5,
+                                            color: Colors.black.withValues(alpha: 0.35),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    Positioned(
-                                      bottom: 8,
-                                      left: 8,
-                                      child: Text('⌞', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 20)),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // 3. Authentic Polaroid Format Size Switcher Pills (1:1, 3:4, 4:3)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: PolaroidFormat.values.map((f) {
+                                  final isSelected = f == format;
+                                  return GestureDetector(
+                                    onTap: () => _selectPolaroidFormat(f),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: isSelected ? Colors.white : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                                        boxShadow: isSelected
+                                            ? [
+                                                const BoxShadow(
+                                                  color: Color(0x33000000),
+                                                  blurRadius: 4,
+                                                  offset: Offset(0, 1),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: Text(
+                                        f.displayName,
+                                        style: MemoriaTokens.labelSm(
+                                          color: isSelected ? MemoriaTokens.onSurface : Colors.white60,
+                                        ),
+                                      ),
                                     ),
-                                    Positioned(
-                                      bottom: 8,
-                                      right: 8,
-                                      child: Text('⌟', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 20)),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 4. Analog Camera Trigger Bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(32, 0, 32, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Recent Shot Thumbnail Button
+                      GestureDetector(
+                        onTap: () {
+                          if (latestPolaroid != null) {
+                            context.push('/polaroid/${latestPolaroid.id}', extra: latestPolaroid);
+                          } else {
+                            ref.read(navigationIndexProvider.notifier).state = 2;
+                          }
+                        },
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Transform.rotate(
+                              angle: -0.06,
+                              child: Container(
+                                width: 50,
+                                height: 56,
+                                padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+                                decoration: BoxDecoration(
+                                  color: MemoriaTokens.polaroidCard,
+                                  borderRadius: BorderRadius.circular(3),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x40000000),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 3),
                                     ),
                                   ],
                                 ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black12,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: latestPolaroid != null && File(latestPolaroid.imagePath).existsSync()
+                                      ? Image.file(File(latestPolaroid.imagePath), fit: BoxFit.cover)
+                                      : const Icon(Icons.photo_library_outlined, size: 20, color: Colors.black38),
+                                ),
                               ),
-
-                              // Polaroid Chin: Authentic size & film watermark
-                              Expanded(
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        'MEMORIA • ${format.filmType.toUpperCase()} • ${format.dimensions}',
-                                        maxLines: 1,
-                                        style: TextStyle(
-                                          color: Colors.black.withValues(alpha: 0.42),
-                                          fontSize: 9.5,
-                                          letterSpacing: 1.1,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
+                            ),
+                            if (totalCount > 0)
+                              Positioned(
+                                top: -4,
+                                right: -4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: MemoriaTokens.primary,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: Colors.white, width: 1.2),
+                                  ),
+                                  child: Text(
+                                    '$totalCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                               ),
+                          ],
+                        ),
+                      ),
+
+                      // Tactile Instant Shutter Button
+                      GestureDetector(
+                        onTap: _isCapturing ? null : _takePicture,
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.transparent,
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 3.5),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x66000000),
+                                blurRadius: 20,
+                                offset: Offset(0, 6),
+                              ),
                             ],
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              // 4. Shutter Controls: Responsive, Tactile, and Non-Overflowing
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 6, 24, 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Gallery Picker button
-                    IconButton(
-                      icon: const Icon(Icons.photo_library_outlined, size: 30),
-                      onPressed: _pickFromGallery,
-                      tooltip: 'Pick from Gallery',
-                    ),
-
-                    // Tactile Polaroid Shutter Button
-                    GestureDetector(
-                      onTap: _isCapturing ? null : _takePicture,
-                      child: Container(
-                        width: 74,
-                        height: 74,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF1A1918),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x40000000),
-                              blurRadius: 10,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                          border: Border.all(color: Colors.white, width: 3),
-                        ),
-                        child: Center(
                           child: Container(
-                            width: 58,
-                            height: 58,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: const RadialGradient(
+                              gradient: RadialGradient(
                                 colors: [
-                                  Color(0xFFFF523B),
-                                  Color(0xFFE36528),
-                                  Color(0xFFBA4713),
+                                  Color(0xFFFF7A45),
+                                  MemoriaTokens.primary,
+                                  MemoriaTokens.primaryDark,
                                 ],
                               ),
-                              boxShadow: const [
+                              boxShadow: [
                                 BoxShadow(
-                                  color: Color(0x30E36528),
-                                  blurRadius: 6,
+                                  color: Color(0x59E36528),
+                                  blurRadius: 10,
                                   spreadRadius: 1,
                                 ),
                               ],
                             ),
-                            child: _isCapturing
-                                ? const Center(
-                                    child: SizedBox(
-                                      width: 24,
-                                      height: 24,
+                            child: Center(
+                              child: _isCapturing
+                                  ? const SizedBox(
+                                      width: 26,
+                                      height: 26,
                                       child: CircularProgressIndicator(
                                         color: Colors.white,
                                         strokeWidth: 2.5,
                                       ),
+                                    )
+                                  : Container(
+                                      width: 14,
+                                      height: 14,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
+                                      ),
                                     ),
-                                  )
-                                : const Icon(Icons.camera_alt, color: Colors.white, size: 28),
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    // Flash Mode or Camera Switch button
-                    IconButton(
-                      icon: Icon(
-                        _cameras.length > 1 ? Icons.cameraswitch_outlined : Icons.flash_on_outlined,
-                        size: 30,
+                      // Lens Flip Button / Gallery fallback
+                      GestureDetector(
+                        onTap: () {
+                          if (_cameras.length > 1 && _cameraController != null) {
+                            final newCam = _cameraController!.description == _cameras.first
+                                ? _cameras.last
+                                : _cameras.first;
+                            setState(() => _isCameraInitialized = false);
+                            _cameraController?.dispose();
+                            _cameraController = null;
+                            final newController = CameraController(
+                              newCam,
+                              ResolutionPreset.high,
+                              enableAudio: false,
+                            );
+                            newController.initialize().then((_) async {
+                              try {
+                                await newController.setFlashMode(ref.read(cameraFlashModeProvider));
+                              } catch (_) {}
+                              if (mounted) {
+                                setState(() {
+                                  _cameraController = newController;
+                                  _isCameraInitialized = true;
+                                });
+                              }
+                            });
+                          } else {
+                            _pickFromGallery();
+                          }
+                        },
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withValues(alpha: 0.45),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                          ),
+                          child: const Icon(
+                            Icons.flip_camera_ios,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
                       ),
-                      onPressed: () {
-                        if (_cameras.length > 1 && _cameraController != null) {
-                          final newCam = _cameraController!.description == _cameras.first
-                              ? _cameras.last
-                              : _cameras.first;
-                          setState(() {
-                            _isCameraInitialized = false;
-                          });
-                          _cameraController?.dispose();
-                          _cameraController = null;
-                          final newController = CameraController(
-                            newCam,
-                            ResolutionPreset.high,
-                            enableAudio: false,
-                          );
-                          newController.initialize().then((_) async {
-                            try {
-                              await newController.setFlashMode(ref.read(cameraFlashModeProvider));
-                            } catch (_) {}
-                            if (mounted) {
-                              setState(() {
-                                _cameraController = newController;
-                                _isCameraInitialized = true;
-                              });
-                            }
-                          }).catchError((_) {
-                            if (mounted) {
-                              setState(() {
-                                _isCameraInitialized = false;
-                              });
-                            }
-                          });
-                        } else {
-                          _cycleFlashMode();
-                        }
-                      },
-                      tooltip: _cameras.length > 1 ? 'Switch Camera' : 'Toggle Flash',
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
 
-        // 5. Visual Flash Burst Animation Overlay (Physical Xenon Flash Simulator)
-        IgnorePointer(
-          ignoring: true,
-          child: AnimatedOpacity(
-            opacity: _isFlashing ? 0.95 : 0.0,
-            duration: Duration(milliseconds: _isFlashing ? 30 : 120),
-            curve: Curves.easeOut,
-            child: Container(
-              color: Colors.white,
+                const SizedBox(height: 8),
+              ],
             ),
           ),
-        ),
-      ],
+
+          // Xenon Flash Effect
+          if (_isFlashing)
+            Positioned.fill(
+              child: Container(color: Colors.white.withValues(alpha: 0.95)),
+            ),
+        ],
+      ),
     );
   }
 }

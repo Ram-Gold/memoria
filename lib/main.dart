@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/theme/memoria_theme.dart';
 import 'app/router.dart';
 
 Future<void> main() async {
@@ -27,11 +28,9 @@ class MemoriaApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Memoria',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-      ),
+      theme: MemoriaTheme.lightTheme,
       routerConfig: appRouter,
     );
   }
 }
+

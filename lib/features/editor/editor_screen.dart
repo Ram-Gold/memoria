@@ -1,14 +1,21 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../app/providers.dart';
 import '../../core/services/app_tts_service.dart';
+import '../../core/theme/memoria_tokens.dart';
+import '../../core/widgets/rubber_stamp.dart';
+import '../../core/widgets/washi_tape.dart';
 import '../../domain/models/analysis_result.dart';
 import '../../domain/models/detected_object.dart';
 import '../../domain/models/polaroid.dart';
 
+/// Stitch "Polaroid Reveal & Object Explorer"
+/// Combines the physical Polaroid frame with interactive in-photo hotspots,
+/// handwritten Caveat script chin, RAG memory recall, and object switcher.
 class EditorScreen extends ConsumerStatefulWidget {
   final String imagePath;
   final AnalysisResult analysisResult;
@@ -28,6 +35,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   final AppTtsService _ttsService = AppTtsService();
   bool _isSaving = false;
   bool _invertScriptOrder = false; // For Baybayin vs Latin toggle
+  bool _isFavorite = false;
 
   @override
   void initState() {
@@ -39,7 +47,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 id: 'default',
                 labelEn: 'Item',
                 targetWord: 'Word',
-                box: [0, 0, 1000, 1000],
+                box: [200, 200, 800, 800],
               ));
     _ttsService.init();
   }
@@ -62,7 +70,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             '${language.displayName} offline voice data missing. Download offline speech data in Android Settings > Google Text-to-Speech.',
           ),
           duration: const Duration(seconds: 4),
-          action: SnackBarAction(label: 'OK', onPressed: () {}),
         ),
       );
     }
@@ -71,6 +78,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   Future<void> _savePolaroid() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
+    HapticFeedback.mediumImpact();
 
     try {
       final polId = const Uuid().v4();
@@ -84,7 +92,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       final polaroid = Polaroid(
         id: polId,
         imagePath: widget.imagePath,
-        outputImagePath: widget.imagePath, // In future, RepaintBoundary export PNG
+        outputImagePath: widget.imagePath,
         languageCode: language.code,
         selectedObjectId: _selectedObject.id,
         selectedWord: _selectedObject.targetWord,
@@ -94,13 +102,25 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         difficultyLevel: _selectedObject.difficultyLevel,
         createdAt: DateTime.now(),
         detectedObjects: confidentObjects,
+        isFavorite: _isFavorite,
       );
 
       await ref.read(polaroidsProvider.notifier).addPolaroid(polaroid);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Saved to Scrapbook!')),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Text('Preserved in your Scrapbook!', style: MemoriaTokens.bodyMd(color: Colors.white)),
+              ],
+            ),
+            backgroundColor: MemoriaTokens.secondary,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
         // Navigate to Scrapbook tab on main navigation scaffold
         ref.read(navigationIndexProvider.notifier).state = 2;
@@ -129,6 +149,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   Widget build(BuildContext context) {
     final language = ref.read(activeLanguageProvider);
     final isFilipino = language.code == 'fil';
+    final format = ref.watch(selectedPolaroidFormatProvider);
+    final threshold = ref.watch(confidenceThresholdProvider);
+    final confidentObjects = widget.analysisResult.detectedObjects
+        .where((o) => o.isConfident(threshold))
+        .toList();
 
     final line1 = _invertScriptOrder
         ? (_selectedObject.secondaryScript ?? _selectedObject.targetWord)
@@ -139,231 +164,242 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         : (_selectedObject.secondaryScript ?? '');
 
     return Scaffold(
+      backgroundColor: MemoriaTokens.surface,
       appBar: AppBar(
-        title: const Text('Polaroid Reveal & Editor'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          'Polaroid Reveal',
+          style: MemoriaTokens.headlineSm(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.volume_up),
             tooltip: 'Pronunciation TTS',
             onPressed: _speak,
           ),
-          IconButton(
-            icon: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.check),
-            tooltip: 'Save Polaroid',
-            onPressed: _isSaving ? null : _savePolaroid,
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: TextButton.icon(
+              onPressed: _isSaving ? null : _savePolaroid,
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: MemoriaTokens.primary),
+                    )
+                  : const Icon(Icons.check, size: 18, color: MemoriaTokens.primary),
+              label: Text(
+                'Preserve',
+                style: MemoriaTokens.labelLg(color: MemoriaTokens.primary),
+              ),
+            ),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // AI Scene Description
-            Container(
-              padding: const EdgeInsets.all(12),
-              color: Colors.grey[200],
-              child: Text(
-                'AI Scene: "${widget.analysisResult.sceneDescription}"',
-                style: const TextStyle(fontStyle: FontStyle.italic),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // RAG Spaced Memory Recall Card
-            if (widget.analysisResult.ragContext?.hasHistory == true) ...[
-              Card(
-                color: Colors.amber[50],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Colors.amber.shade300),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.history_edu, color: Colors.amber),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.analysisResult.ragContext!.recallHeadline ?? 'Spaced Memory Recall',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'First captured: ${widget.analysisResult.ragContext!.history!.firstCapturedAt.toLocal().toString().split(" ").first} · Reinforces spaced learning retention!',
-                              style: const TextStyle(fontSize: 12, color: Colors.black87),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-
-            // RAG Pedagogical Collocation Card
-            if (widget.analysisResult.ragContext?.recommendedCollocation != null) ...[
-              Card(
-                color: Colors.blueGrey[50],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Colors.blueGrey.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.menu_book, color: Colors.blueGrey),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Collocation Ground Truth (Dictionary RAG):',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black54),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.analysisResult.ragContext!.recommendedCollocation!,
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                            ),
-                            if (widget.analysisResult.ragContext!.phraseTranslation != null)
-                              Text(
-                                widget.analysisResult.ragContext!.phraseTranslation!,
-                                style: const TextStyle(fontSize: 12, color: Colors.black87, fontStyle: FontStyle.italic),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-
-
-            // Polaroid Card Frame
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
-                ],
-              ),
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
-              child: Column(
+            // 1. The Physical Polaroid Print with In-Photo Hotspots
+            Center(
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
                 children: [
-                  // Polaroid Format and AI Engine Header Bar
-                  Builder(
-                    builder: (context) {
-                      final format = ref.watch(selectedPolaroidFormatProvider);
-                      final aiMode = ref.watch(aiVisionModeProvider);
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${format.filmType.toUpperCase()} • ${format.dimensions}',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.8,
-                                color: Colors.black.withValues(alpha: 0.45),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: aiMode == AiVisionMode.cloudMistral
-                                    ? const Color(0x1FE36528)
-                                    : const Color(0x1F2E7D32),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                aiMode == AiVisionMode.cloudMistral ? '☁️ Mistral VLM' : '⚡ Local ML Kit',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: aiMode == AiVisionMode.cloudMistral
-                                      ? const Color(0xFFD44B0F)
-                                      : const Color(0xFF2E7D32),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                  Transform.rotate(
+                    angle: -0.015,
+                    child: Container(
+                      width: 320,
+                      decoration: BoxDecoration(
+                        color: MemoriaTokens.polaroidCard,
+                        borderRadius: BorderRadius.circular(MemoriaTokens.radiusSm),
+                        border: Border.all(color: MemoriaTokens.polaroidBorder, width: 1),
+                        boxShadow: MemoriaTokens.shadowPolaroid,
+                      ),
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Photographic Aperture Window with Hotspot Layer
+                          AspectRatio(
+                            aspectRatio: format.ratio,
+                            child: LayoutBuilder(
+                              builder: (context, photoConstraints) {
+                                final photoW = photoConstraints.maxWidth;
+                                final photoH = photoConstraints.maxHeight;
 
-                  // Photo fitted to selected Polaroid format
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Builder(
-                      builder: (context) {
-                        final format = ref.watch(selectedPolaroidFormatProvider);
-                        return AspectRatio(
-                          aspectRatio: format.ratio,
-                          child: Image.file(
-                            File(widget.imagePath),
-                            width: double.infinity,
-                            fit: BoxFit.cover,
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(2),
+                                    border: Border.all(
+                                      color: Colors.black.withValues(alpha: 0.12),
+                                      width: 0.8,
+                                    ),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      // Image File
+                                      File(widget.imagePath).existsSync()
+                                          ? Image.file(File(widget.imagePath), fit: BoxFit.cover)
+                                          : Container(color: MemoriaTokens.surfaceContainerHigh),
+
+                                      // Ambient Film Grain Overlay
+                                      Container(
+                                        color: MemoriaTokens.primary.withValues(alpha: 0.04),
+                                      ),
+
+                                      // Interactive In-Photo Hotspots
+                                      ...confidentObjects.map((obj) {
+                                        final isSelected = obj.id == _selectedObject.id;
+
+                                        // Compute normalized box center
+                                        final normTop = ((obj.box[0] + obj.box[2]) / 2) / 1000.0;
+                                        final normLeft = ((obj.box[1] + obj.box[3]) / 2) / 1000.0;
+
+                                        final posX = (normLeft * photoW).clamp(20.0, photoW - 20.0);
+                                        final posY = (normTop * photoH).clamp(20.0, photoH - 20.0);
+
+                                        return Positioned(
+                                          left: posX - 16,
+                                          top: posY - 16,
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              HapticFeedback.lightImpact();
+                                              setState(() => _selectedObject = obj);
+                                              _speak(obj);
+                                            },
+                                            child: Stack(
+                                              alignment: Alignment.center,
+                                              children: [
+                                                if (isSelected)
+                                                  Container(
+                                                    width: 32,
+                                                    height: 32,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: MemoriaTokens.primary.withValues(alpha: 0.3),
+                                                    ),
+                                                  ),
+                                                Container(
+                                                  width: 22,
+                                                  height: 22,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: isSelected
+                                                        ? MemoriaTokens.primary
+                                                        : Colors.white.withValues(alpha: 0.85),
+                                                    boxShadow: const [
+                                                      BoxShadow(
+                                                        color: Color(0x40000000),
+                                                        blurRadius: 4,
+                                                        offset: Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Center(
+                                                    child: Container(
+                                                      width: 8,
+                                                      height: 8,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        color: isSelected
+                                                            ? Colors.white
+                                                            : MemoriaTokens.secondary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }),
+
+                                      // Film Roll Tag
+                                      Positioned(
+                                        bottom: 6,
+                                        right: 6,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withValues(alpha: 0.55),
+                                            borderRadius: BorderRadius.circular(2),
+                                          ),
+                                          child: Text(
+                                            format.filmType.toUpperCase(),
+                                            style: MemoriaTokens.telemetryMono(
+                                              fontSize: 8,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        );
-                      },
+
+                          // Signature Polaroid Chin with Handwritten Calligraphy
+                          Container(
+                            constraints: const BoxConstraints(minHeight: 64),
+                            padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      line1,
+                                      textAlign: TextAlign.center,
+                                      style: MemoriaTokens.handwrittenChin(
+                                        fontSize: 32,
+                                        color: MemoriaTokens.onSurface,
+                                      ),
+                                    ),
+                                    if (line2.isNotEmpty || _selectedObject.transliteration != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        line2.isNotEmpty
+                                            ? '$line2 ${_selectedObject.transliteration != null ? "· ${_selectedObject.transliteration}" : ""}'
+                                            : _selectedObject.transliteration ?? '',
+                                        style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+
+                                // Rubber Heart Stamp
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: RubberStampWidget(
+                                    isStamped: _isFavorite,
+                                    onTap: () {
+                                      setState(() => _isFavorite = !_isFavorite);
+                                    },
+                                    size: 32,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 16),
 
-                  // Polaroid Chin: Line 1 (Native Script)
-                  Text(
-                    line1,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-
-                  // Polaroid Chin: Line 2 (Pronunciation & Translation)
-                  const SizedBox(height: 6),
-                  Text(
-                    '$line2 ${_selectedObject.transliteration != null ? "· ${_selectedObject.transliteration}" : ""}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16, color: Colors.black54),
-                  ),
-
-                  // Part of speech / Level badge
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${_selectedObject.partOfSpeech ?? "Noun"} • ${_selectedObject.difficultyLevel ?? "Level"}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
+                  // Washi Tape Header
+                  const Positioned(
+                    top: -10,
+                    child: WashiTapeWidget(width: 88, height: 20),
                   ),
                 ],
               ),
@@ -371,121 +407,216 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
             const SizedBox(height: 24),
 
-            // Controls & Toggles
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _speak,
-                  icon: const Icon(Icons.volume_up),
-                  label: const Text('Listen TTS'),
+            // Script Order Switcher for Tagalog / Baybayin
+            if (isFilipino) ...[
+              OutlinedButton.icon(
+                onPressed: () {
+                  setState(() => _invertScriptOrder = !_invertScriptOrder);
+                },
+                icon: const Icon(Icons.swap_vert, size: 16),
+                label: Text(_invertScriptOrder ? 'Baybayin First' : 'Latin First'),
+              ),
+              const SizedBox(height: 14),
+            ],
+
+            // 2. AI Scene Context Card
+            if (widget.analysisResult.sceneDescription.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: MemoriaTokens.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(MemoriaTokens.radiusMd),
+                  border: Border.all(color: MemoriaTokens.polaroidBorder),
                 ),
-                if (isFilipino)
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _invertScriptOrder = !_invertScriptOrder;
-                      });
-                    },
-                    icon: const Icon(Icons.swap_vert),
-                    label: Text(_invertScriptOrder ? 'Baybayin First' : 'Latin First'),
-                  ),
-              ],
-            ),
-
-            // Secondary Detected Objects Switcher (Filtered by confidence threshold)
-            Builder(
-              builder: (context) {
-                final threshold = ref.watch(confidenceThresholdProvider);
-                final confidentObjects = widget.analysisResult.detectedObjects
-                    .where((obj) => obj.isConfident(threshold))
-                    .toList();
-
-                if (confidentObjects.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: Row(
                   children: [
-                    const Text(
-                      'Switch Taught Object in Scene:',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    const Icon(Icons.auto_awesome, size: 18, color: MemoriaTokens.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '“${widget.analysisResult.sceneDescription}”',
+                        style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurface),
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    ...confidentObjects.map((obj) {
-                      final isSelected = obj.id == _selectedObject.id;
-                      return Card(
-                        color: isSelected ? Colors.orange[50] : Colors.white,
-                        elevation: isSelected ? 2 : 0.5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(
-                            color: isSelected ? Colors.orange : Colors.grey.shade300,
-                            width: isSelected ? 1.5 : 0.8,
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
+            // 3. Spaced Memory Recall (RAG)
+            if (widget.analysisResult.ragContext?.hasHistory == true) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF9ED),
+                  borderRadius: BorderRadius.circular(MemoriaTokens.radiusMd),
+                  border: Border.all(color: const Color(0xFFFFD599)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.history_edu, color: Color(0xFFD97706), size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.analysisResult.ragContext!.recallHeadline ?? 'Spaced Memory Recall',
+                            style: MemoriaTokens.labelLg(color: const Color(0xFF92400E)),
                           ),
-                        ),
-                        child: ListTile(
-                          leading: IconButton(
-                            icon: const Icon(Icons.volume_up),
-                            color: isSelected ? Colors.orange[800] : Colors.black54,
-                            tooltip: 'Hear pronunciation',
-                            onPressed: () => _speak(obj),
+                          const SizedBox(height: 3),
+                          Text(
+                            'First captured: ${widget.analysisResult.ragContext!.history!.firstCapturedAt.toLocal().toString().split(" ").first} · Reinforces retention!',
+                            style: MemoriaTokens.bodySm(color: const Color(0xFF78350F)),
                           ),
-                          title: Text(
-                            '${obj.targetWord} (${obj.labelEn})',
-                            style: TextStyle(
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
+            // 4. Pedagogical Collocation Card
+            if (widget.analysisResult.ragContext?.recommendedCollocation != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: MemoriaTokens.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(MemoriaTokens.radiusMd),
+                  border: Border.all(color: MemoriaTokens.polaroidBorder),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.menu_book, color: MemoriaTokens.secondary, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'COLLOCATION GROUND TRUTH',
+                            style: MemoriaTokens.labelSm(color: MemoriaTokens.secondary),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            widget.analysisResult.ragContext!.recommendedCollocation!,
+                            style: MemoriaTokens.headlineSm(color: MemoriaTokens.onSurface),
+                          ),
+                          if (widget.analysisResult.ragContext!.phraseTranslation != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.analysisResult.ragContext!.phraseTranslation!,
+                              style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
                             ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+
+            // 5. Detected Objects Switcher Cards
+            if (confidentObjects.isNotEmpty) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Switch Taught Object in Scene:',
+                  style: MemoriaTokens.labelLg(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...confidentObjects.map((obj) {
+                final isSelected = obj.id == _selectedObject.id;
+                return GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    setState(() => _selectedObject = obj);
+                    _speak(obj);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? MemoriaTokens.primaryContainer
+                          : MemoriaTokens.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(MemoriaTokens.radiusMd),
+                      border: Border.all(
+                        color: isSelected ? MemoriaTokens.primary : MemoriaTokens.polaroidBorder,
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.volume_up,
+                            color: isSelected ? MemoriaTokens.primaryDark : MemoriaTokens.outline,
+                            size: 20,
                           ),
-                          subtitle: Text('${obj.secondaryScript ?? ""} · ${obj.transliteration ?? ""}'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+                          onPressed: () => _speak(obj),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '${obj.confidencePercentage}% confident',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.green,
-                                  ),
+                              Text(
+                                '${obj.targetWord} (${obj.labelEn})',
+                                style: MemoriaTokens.labelLg(
+                                  color: isSelected ? MemoriaTokens.primaryDark : MemoriaTokens.onSurface,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              isSelected
-                                  ? const Icon(Icons.check_circle, color: Colors.orange)
-                                  : const Icon(Icons.circle_outlined),
+                              if (obj.transliteration != null || obj.secondaryScript != null)
+                                Text(
+                                  '${obj.secondaryScript ?? ""} · ${obj.transliteration ?? ""}',
+                                  style: MemoriaTokens.bodySm(),
+                                ),
                             ],
                           ),
-                          onTap: () {
-                            setState(() {
-                              _selectedObject = obj;
-                            });
-                          },
                         ),
-                      );
-                    }),
-                    const SizedBox(height: 24),
-                  ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: MemoriaTokens.secondaryContainer.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${obj.confidencePercentage}% confident',
+                            style: MemoriaTokens.labelSm(color: MemoriaTokens.secondary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
-              },
-            ),
+              }),
+            ],
 
-            // Save button
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(16),
+            const SizedBox(height: 24),
+
+            // Big Preserve Button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: _isSaving ? null : _savePolaroid,
+                icon: const Icon(Icons.bookmark_add_outlined),
+                label: Text(
+                  _isSaving ? 'Preserving...' : 'Save to Scrapbook',
+                  style: const TextStyle(fontSize: 16),
+                ),
               ),
-              onPressed: _isSaving ? null : _savePolaroid,
-              child: _isSaving
-                  ? const CircularProgressIndicator()
-                  : const Text('Save to Scrapbook', style: TextStyle(fontSize: 16)),
             ),
           ],
         ),

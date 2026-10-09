@@ -7,8 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../../app/providers.dart';
+import '../../core/theme/memoria_tokens.dart';
 import '../../domain/models/analysis_result.dart';
 
+/// Stitch "Memoria - Shake to Develop"
+/// Studio worktable stage where captured latent photo develops out of dark chemical
+/// emulsion fluid synchronized with accelerometer physical shakes and fallback timer.
 class DevelopScreen extends ConsumerStatefulWidget {
   final String imagePath;
 
@@ -54,7 +58,6 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen> {
   void _listenToShakeSensor() {
     _sensorSub = userAccelerometerEventStream().listen((event) {
       final now = DateTime.now();
-      // Calculate magnitude
       final magnitude = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
 
       // Threshold > 15 m/s² with 200ms debounce
@@ -149,144 +152,262 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen> {
     final aiMode = ref.watch(aiVisionModeProvider);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: MemoriaTokens.surface,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         title: Text(
-          '${format.filmType} • ${format.dimensions}',
-          style: const TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.8),
+          'Darkroom Development',
+          style: MemoriaTokens.headlineSm(),
         ),
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Undeveloped black Polaroid frame with authentic format styling
-                Container(
-                  width: 260,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.white24, blurRadius: 16),
-                    ],
-                  ),
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
-                  child: Column(
-                    children: [
-                      AspectRatio(
-                        aspectRatio: format.ratio,
-                        child: Container(
-                          color: Color.lerp(Colors.black, Colors.grey[850], _agitationLevel),
-                          child: Center(
-                            child: Text(
-                              _isShaken ? 'Developing...' : 'Shake Gently...',
-                              style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+          child: Column(
+            children: [
+              // 1. Studio Worktable Stage with Ambient Light Spill
+              Center(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    // Ambient light spill glows
+                    Positioned(
+                      top: -16,
+                      left: -20,
+                      child: Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: MemoriaTokens.primaryContainer.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      right: -16,
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: MemoriaTokens.secondaryContainer.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+
+                    // The Developing Polaroid Physical Card
+                    Transform.rotate(
+                      angle: -0.018,
+                      child: Container(
+                        width: 300,
+                        decoration: BoxDecoration(
+                          color: MemoriaTokens.polaroidCard,
+                          borderRadius: BorderRadius.circular(MemoriaTokens.radiusSm),
+                          border: Border.all(color: MemoriaTokens.polaroidBorder, width: 1),
+                          boxShadow: MemoriaTokens.shadowPolaroid,
+                        ),
+                        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Developing Emulsion Window
+                            AspectRatio(
+                              aspectRatio: format.ratio,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: MemoriaTokens.emulsionDark,
+                                  borderRadius: BorderRadius.circular(2),
+                                  border: Border.all(color: Colors.black.withValues(alpha: 0.2)),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    // Emerging Latent Photograph
+                                    if (File(widget.imagePath).existsSync())
+                                      AnimatedOpacity(
+                                        duration: const Duration(milliseconds: 300),
+                                        opacity: (0.15 + (0.85 * _agitationLevel)).clamp(0.0, 1.0),
+                                        child: Image.file(
+                                          File(widget.imagePath),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+
+                                    // Swirling Chemical Emulsion Veil
+                                    AnimatedOpacity(
+                                      duration: const Duration(milliseconds: 300),
+                                      opacity: (1.0 - _agitationLevel * 0.85).clamp(0.0, 1.0),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: RadialGradient(
+                                            center: Alignment.center,
+                                            radius: 0.9,
+                                            colors: [
+                                              const Color(0xFF2A231D).withValues(alpha: 0.92),
+                                              const Color(0xFF18191C).withValues(alpha: 0.95),
+                                              const Color(0xFF101114).withValues(alpha: 0.98),
+                                            ],
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            _isShaken ? 'Fixing Image...' : 'Shake Gently...',
+                                            style: MemoriaTokens.handwrittenChin(
+                                              fontSize: 22,
+                                              color: Colors.white54,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    // Developing Reticle Frame
+                                    Center(
+                                      child: Container(
+                                        width: 50,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.white.withValues(alpha: 0.3),
+                                            width: 1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(25),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
+
+                            // Chin Margin
+                            const SizedBox(height: 10),
+                            Text(
+                              'MEMORIA • ${format.filmType.toUpperCase()} • ${format.dimensions}',
+                              style: MemoriaTokens.telemetryMono(
+                                fontSize: 9,
+                                color: Colors.black.withValues(alpha: 0.45),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // 2. Shake Ritual Interaction Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: MemoriaTokens.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(MemoriaTokens.radiusLg),
+                  border: Border.all(color: MemoriaTokens.polaroidBorder),
+                  boxShadow: MemoriaTokens.shadowLevel1,
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.vibration, color: MemoriaTokens.primary, size: 20),
+                            const SizedBox(width: 8),
+                            Text('Chemical Agitation', style: MemoriaTokens.labelLg()),
+                          ],
+                        ),
+                        Text(
+                          '${(_agitationLevel * 100).toInt()}%',
+                          style: MemoriaTokens.labelLg(color: MemoriaTokens.primaryDark),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Progress Bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                      child: LinearProgressIndicator(
+                        value: _agitationLevel,
+                        backgroundColor: MemoriaTokens.surfaceContainer,
+                        valueColor: const AlwaysStoppedAnimation<Color>(MemoriaTokens.primary),
+                        minHeight: 8,
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // AI Engine State
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: aiMode == AiVisionMode.cloudMistral
+                                ? MemoriaTokens.primaryContainer
+                                : MemoriaTokens.secondaryContainer,
+                            borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(aiMode == AiVisionMode.cloudMistral ? '☁️' : '⚡',
+                                  style: const TextStyle(fontSize: 12)),
+                              const SizedBox(width: 5),
+                              Text(
+                                _isAiDone
+                                    ? 'Vocabulary Ready ✓'
+                                    : (aiMode == AiVisionMode.cloudMistral
+                                        ? 'Mistral VLM parsing...'
+                                        : 'ML Kit analyzing...'),
+                                style: MemoriaTokens.labelSm(
+                                  color: aiMode == AiVisionMode.cloudMistral
+                                      ? MemoriaTokens.primaryDark
+                                      : MemoriaTokens.secondary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'MEMORIA • ${format.filmType.toUpperCase()} • ${format.dimensions}',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.1,
-                          color: Colors.black.withValues(alpha: 0.4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // AI Engine Mode & Status Pill
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: aiMode == AiVisionMode.cloudMistral
-                        ? const Color(0x28E36528)
-                        : const Color(0x282E7D32),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: aiMode == AiVisionMode.cloudMistral
-                          ? const Color(0xFFE36528)
-                          : const Color(0xFF4CAF50),
-                      width: 1,
+                      ],
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(aiMode == AiVisionMode.cloudMistral ? '☁️' : '⚡', style: const TextStyle(fontSize: 14)),
-                      const SizedBox(width: 6),
-                      Text(
-                        aiMode == AiVisionMode.cloudMistral
-                            ? 'Cloud AI (Mistral VLM)'
-                            : 'Local AI (On-Device ML Kit)',
-                        style: TextStyle(
-                          color: aiMode == AiVisionMode.cloudMistral
-                              ? const Color(0xFFFF8A65)
-                              : const Color(0xFF81C784),
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
+              ),
 
+              if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
-
-                // Status indicators
                 Text(
-                  'Agitation Level: ${(_agitationLevel * 100).toInt()}%',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _isAiDone
-                      ? 'AI vocabulary recognition complete ✓'
-                      : (aiMode == AiVisionMode.cloudMistral
-                          ? 'Mistral VLM parsing scene...'
-                          : 'Local ML Kit analyzing image...'),
-                  style: TextStyle(
-                    color: _isAiDone ? Colors.greenAccent : Colors.orangeAccent,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    'Error: $_errorMessage',
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-
-                const SizedBox(height: 20),
-
-                // Button to simulate shake for simulator / testing
-                OutlinedButton.icon(
-                  onPressed: _simulateShake,
-                  icon: const Icon(Icons.vibration, color: Colors.white, size: 18),
-                  label: const Text('Simulate Shake (Tester Shortcut)', style: TextStyle(color: Colors.white, fontSize: 13)),
+                  'Error: $_errorMessage',
+                  style: MemoriaTokens.bodySm(color: MemoriaTokens.error),
+                  textAlign: TextAlign.center,
                 ),
               ],
-            ),
+
+              const SizedBox(height: 24),
+
+              // Tester Shake Simulator Button
+              OutlinedButton.icon(
+                onPressed: _simulateShake,
+                icon: const Icon(Icons.touch_app, size: 16),
+                label: const Text('Simulate Shake (Tester Shortcut)'),
+              ),
+            ],
           ),
         ),
       ),
