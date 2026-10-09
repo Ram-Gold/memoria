@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/theme/memoria_tokens.dart';
@@ -86,7 +87,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.photo_library_outlined,
+                                LucideIcons.images,
                                 size: 16,
                                 color: _viewMode == 0 ? MemoriaTokens.primary : MemoriaTokens.onSurfaceVariant,
                               ),
@@ -128,7 +129,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.folder_special_outlined,
+                                LucideIcons.folderHeart,
                                 size: 16,
                                 color: _viewMode == 1 ? MemoriaTokens.primary : MemoriaTokens.onSurfaceVariant,
                               ),
@@ -255,7 +256,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    const Icon(Icons.menu_book, color: MemoriaTokens.primary, size: 20),
+                                    const Icon(LucideIcons.bookOpen, color: MemoriaTokens.primary, size: 20),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Memoria Scrapbook',
@@ -315,10 +316,10 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                                 decoration: InputDecoration(
                                   hintText: 'Search memories (word, romanization)...',
                                   hintStyle: MemoriaTokens.bodySm(color: MemoriaTokens.outline),
-                                  prefixIcon: const Icon(Icons.search, size: 18, color: MemoriaTokens.outline),
+                                  prefixIcon: const Icon(LucideIcons.search, size: 18, color: MemoriaTokens.outline),
                                   suffixIcon: _searchController.text.isNotEmpty
                                       ? IconButton(
-                                          icon: const Icon(Icons.clear, size: 16),
+                                          icon: const Icon(LucideIcons.x, size: 16),
                                           onPressed: () {
                                             _searchController.clear();
                                             ref.read(scrapbookSearchQueryProvider.notifier).state = '';
@@ -373,7 +374,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.search_off, size: 48, color: MemoriaTokens.outline),
+                  const Icon(LucideIcons.searchX, size: 48, color: MemoriaTokens.outline),
                   const SizedBox(height: 12),
                   Text('No memories found for "$query"', style: MemoriaTokens.bodyMd()),
                   const SizedBox(height: 10),
@@ -406,7 +407,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                       border: Border.all(color: MemoriaTokens.primary.withValues(alpha: 0.3)),
                     ),
                     child: const Center(
-                      child: Icon(Icons.camera_alt, size: 34, color: MemoriaTokens.primary),
+                      child: Icon(LucideIcons.camera, size: 34, color: MemoriaTokens.primary),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -422,7 +423,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                     onPressed: () {
                       ref.read(navigationIndexProvider.notifier).state = 0;
                     },
-                    icon: const Icon(Icons.camera),
+                    icon: const Icon(LucideIcons.camera),
                     label: const Text('Open Camera HUD'),
                   ),
                 ],
@@ -472,7 +473,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                           color: MemoriaTokens.primaryContainer,
                         ),
                         child: const Icon(
-                          Icons.add_a_photo,
+                          LucideIcons.imagePlus,
                           color: MemoriaTokens.primary,
                           size: 20,
                         ),
@@ -594,7 +595,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right, color: MemoriaTokens.outline),
+                    const Icon(LucideIcons.chevronRight, color: MemoriaTokens.outline),
                   ],
                 ),
               ),

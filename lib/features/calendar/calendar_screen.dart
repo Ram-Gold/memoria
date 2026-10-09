@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
 import '../../core/services/app_tts_service.dart';
 import '../../core/theme/memoria_tokens.dart';
@@ -114,7 +115,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         children: [
                           IconButton(
                             onPressed: _prevMonth,
-                            icon: const Icon(Icons.chevron_left),
+                            icon: const Icon(LucideIcons.chevronLeft),
                             style: IconButton.styleFrom(
                               backgroundColor: MemoriaTokens.surfaceContainer,
                               iconSize: 20,
@@ -140,7 +141,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.today, size: 14, color: MemoriaTokens.onSurfaceVariant),
+                                  const Icon(LucideIcons.calendar, size: 14, color: MemoriaTokens.onSurfaceVariant),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Today',
@@ -153,7 +154,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           const SizedBox(width: 4),
                           IconButton(
                             onPressed: _nextMonth,
-                            icon: const Icon(Icons.chevron_right),
+                            icon: const Icon(LucideIcons.chevronRight),
                             style: IconButton.styleFrom(
                               backgroundColor: MemoriaTokens.surfaceContainer,
                               iconSize: 20,
@@ -256,7 +257,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         crossAxisCount: 7,
         crossAxisSpacing: 4,
         mainAxisSpacing: 6,
-        childAspectRatio: 0.76,
+        childAspectRatio: 0.70,
       ),
       itemBuilder: (context, index) {
         if (index < startingWeekday || index >= startingWeekday + daysInMonth) {
@@ -298,7 +299,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 width: isSelected ? 1.5 : 1,
               ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -316,65 +317,67 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
                 // Mini Polaroid Tile if exposures exist
                 if (hasExposures)
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    clipBehavior: Clip.none,
-                    children: [
-                      Transform.rotate(
-                        angle: (dayNum % 2 == 0) ? 0.03 : -0.03,
-                        child: Container(
-                          width: 30,
-                          height: 36,
-                          padding: const EdgeInsets.fromLTRB(2, 2, 2, 5),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(2),
-                            border: Border.all(color: const Color(0xFFE8E4DF), width: 0.8),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x14000000),
-                                blurRadius: 3,
-                                offset: Offset(0, 1),
-                              ),
-                            ],
-                          ),
+                  Flexible(
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      clipBehavior: Clip.none,
+                      children: [
+                        Transform.rotate(
+                          angle: (dayNum % 2 == 0) ? 0.03 : -0.03,
                           child: Container(
+                            width: 27,
+                            height: 33,
+                            padding: const EdgeInsets.fromLTRB(2, 2, 2, 4),
                             decoration: BoxDecoration(
-                              color: Colors.black12,
-                              borderRadius: BorderRadius.circular(1),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(2),
+                              border: Border.all(color: const Color(0xFFE8E4DF), width: 0.8),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x14000000),
+                                  blurRadius: 3,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
                             ),
-                            clipBehavior: Clip.antiAlias,
-                            child: File(exposures.first.imagePath).existsSync()
-                                ? Image.file(File(exposures.first.imagePath), fit: BoxFit.cover)
-                                : const SizedBox.shrink(),
-                          ),
-                        ),
-                      ),
-                      // Badge Count
-                      if (exposures.length > 1)
-                        Positioned(
-                          right: -3,
-                          bottom: -3,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: MemoriaTokens.primary,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '${exposures.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black12,
+                                borderRadius: BorderRadius.circular(1),
                               ),
+                              clipBehavior: Clip.antiAlias,
+                              child: File(exposures.first.imagePath).existsSync()
+                                  ? Image.file(File(exposures.first.imagePath), fit: BoxFit.cover)
+                                  : const SizedBox.shrink(),
                             ),
                           ),
                         ),
-                    ],
+                        // Badge Count
+                        if (exposures.length > 1)
+                          Positioned(
+                            right: -3,
+                            bottom: -3,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: MemoriaTokens.primary,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '${exposures.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   )
                 else
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
               ],
             ),
           ),
@@ -403,7 +406,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.auto_stories_outlined, color: MemoriaTokens.primary, size: 20),
+                  const Icon(LucideIcons.bookOpen, color: MemoriaTokens.primary, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     'Daily Log • $dateStr $dayStr',
@@ -426,7 +429,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.photo_camera_outlined, size: 36, color: MemoriaTokens.outline),
+                    const Icon(LucideIcons.camera, size: 36, color: MemoriaTokens.outline),
                     const SizedBox(height: 8),
                     Text(
                       'No physical exposures on this date.',
@@ -490,9 +493,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 borderRadius: BorderRadius.circular(1),
                               ),
                               clipBehavior: Clip.antiAlias,
-                              child: File(p.imagePath).existsSync()
+                               child: File(p.imagePath).existsSync()
                                   ? Image.file(File(p.imagePath), fit: BoxFit.cover)
-                                  : const Icon(Icons.broken_image, size: 20),
+                                  : const Icon(LucideIcons.imageOff, size: 20),
                             ),
                           ),
                         ),
@@ -524,7 +527,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
                         // Audio button & Chevron
                         IconButton(
-                          icon: const Icon(Icons.volume_up, size: 20, color: MemoriaTokens.primary),
+                          icon: const Icon(LucideIcons.volume2, size: 20, color: MemoriaTokens.primary),
                           onPressed: () {
                             _ttsService.speak(
                               languageCode: p.languageCode,
@@ -534,7 +537,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             );
                           },
                         ),
-                        const Icon(Icons.chevron_right, size: 18, color: MemoriaTokens.outline),
+                        const Icon(LucideIcons.chevronRight, size: 18, color: MemoriaTokens.outline),
                       ],
                     ),
                   ),

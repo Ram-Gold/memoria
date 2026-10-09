@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../app/providers.dart';
 import '../../core/services/app_tts_service.dart';
@@ -112,7 +113,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 18),
+                const Icon(LucideIcons.circleCheck, color: Colors.white, size: 18),
                 const SizedBox(width: 8),
                 Text('Preserved in your Scrapbook!', style: MemoriaTokens.bodyMd(color: Colors.white)),
               ],
@@ -167,7 +168,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       backgroundColor: MemoriaTokens.surface,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -176,7 +177,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.volume_up),
+            icon: const Icon(LucideIcons.volume2),
             tooltip: 'Pronunciation TTS',
             onPressed: _speak,
           ),
@@ -190,7 +191,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                       height: 14,
                       child: CircularProgressIndicator(strokeWidth: 2, color: MemoriaTokens.primary),
                     )
-                  : const Icon(Icons.check, size: 18, color: MemoriaTokens.primary),
+                  : const Icon(LucideIcons.check, size: 18, color: MemoriaTokens.primary),
               label: Text(
                 'Preserve',
                 style: MemoriaTokens.labelLg(color: MemoriaTokens.primary),
@@ -393,7 +394,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 onPressed: () {
                   setState(() => _invertScriptOrder = !_invertScriptOrder);
                 },
-                icon: const Icon(Icons.swap_vert, size: 16),
+                icon: const Icon(LucideIcons.arrowUpDown, size: 16),
                 label: Text(_invertScriptOrder ? 'Baybayin First' : 'Latin First'),
               ),
               const SizedBox(height: 14),
@@ -411,7 +412,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.auto_awesome, size: 18, color: MemoriaTokens.primary),
+                    const Icon(LucideIcons.sparkles, size: 18, color: MemoriaTokens.primary),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -438,7 +439,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.history_edu, color: Color(0xFFD97706), size: 20),
+                    const Icon(LucideIcons.history, color: Color(0xFFD97706), size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -475,7 +476,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.menu_book, color: MemoriaTokens.secondary, size: 20),
+                    const Icon(LucideIcons.bookOpen, color: MemoriaTokens.secondary, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -541,7 +542,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                       children: [
                         IconButton(
                           icon: Icon(
-                            Icons.volume_up,
+                            LucideIcons.volume2,
                             color: isSelected ? MemoriaTokens.primaryDark : MemoriaTokens.outline,
                             size: 20,
                           ),
@@ -591,7 +592,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               height: 52,
               child: ElevatedButton.icon(
                 onPressed: _isSaving ? null : _savePolaroid,
-                icon: const Icon(Icons.bookmark_add_outlined),
+                icon: const Icon(LucideIcons.bookmarkPlus),
                 label: Text(
                   _isSaving ? 'Preserving...' : 'Save to Scrapbook',
                   style: const TextStyle(fontSize: 16),

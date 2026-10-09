@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/services/app_tts_service.dart';
@@ -27,6 +29,16 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
   final AppTtsService _ttsService = AppTtsService();
   DetectedObject? _selectedObject;
   bool _isPlayingAudio = false;
+  bool? _isFavoriteOverride;
+
+  void _toggleFavorite(Polaroid p, bool currentFavorite) {
+    final newFavorite = !currentFavorite;
+    HapticFeedback.lightImpact();
+    setState(() {
+      _isFavoriteOverride = newFavorite;
+    });
+    ref.read(polaroidsProvider.notifier).toggleFavorite(p.id, newFavorite);
+  }
 
   @override
   void initState() {
@@ -111,7 +123,14 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = widget.polaroid;
+    final polaroidsAsync = ref.watch(polaroidsProvider);
+    final currentPolaroid = polaroidsAsync.valueOrNull?.firstWhere(
+          (item) => item.id == widget.polaroid.id,
+          orElse: () => widget.polaroid,
+        ) ?? widget.polaroid;
+    final isFavorite = _isFavoriteOverride ?? currentPolaroid.isFavorite;
+    final p = currentPolaroid.copyWith(isFavorite: isFavorite);
+
     final lang = LanguageRegistry.findByCode(p.languageCode);
     final activeWord = _selectedObject?.targetWord ?? p.selectedWord;
     final activeTranslit = _selectedObject?.transliteration ?? p.transliteration ?? '';
@@ -134,7 +153,7 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
       backgroundColor: MemoriaTokens.surface,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -145,17 +164,15 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
           // Favorite rubber stamp toggle
           IconButton(
             icon: Icon(
-              p.isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: MemoriaTokens.stampVermilion,
+              LucideIcons.heart,
+              color: isFavorite ? MemoriaTokens.stampVermilion : MemoriaTokens.outline,
             ),
             tooltip: 'Favorite Exposure',
-            onPressed: () {
-              ref.read(polaroidsProvider.notifier).toggleFavorite(p.id, !p.isFavorite);
-            },
+            onPressed: () => _toggleFavorite(p, isFavorite),
           ),
           // Delete option
           IconButton(
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(LucideIcons.trash2),
             tooltip: 'Delete Memory',
             onPressed: _delete,
           ),
@@ -203,7 +220,7 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
                                   : Container(
                                       color: MemoriaTokens.surfaceContainerHigh,
                                       child: const Center(
-                                        child: Icon(Icons.broken_image, size: 48, color: MemoriaTokens.outline),
+                                        child: Icon(LucideIcons.imageOff, size: 48, color: MemoriaTokens.outline),
                                       ),
                                     ),
                             ),
@@ -244,10 +261,8 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
                                   right: 0,
                                   bottom: 0,
                                   child: RubberStampWidget(
-                                    isStamped: p.isFavorite,
-                                    onTap: () {
-                                      ref.read(polaroidsProvider.notifier).toggleFavorite(p.id, !p.isFavorite);
-                                    },
+                                    isStamped: isFavorite,
+                                    onTap: () => _toggleFavorite(p, isFavorite),
                                     size: 32,
                                   ),
                                 ),
@@ -379,7 +394,7 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Icon(Icons.volume_up, color: Colors.white, size: 22),
+                                  : const Icon(LucideIcons.volume2, color: Colors.white, size: 22),
                             ),
                           ),
                         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
 import '../../core/theme/memoria_tokens.dart';
 import '../calendar/calendar_screen.dart';
@@ -44,7 +45,7 @@ class MainScaffold extends ConsumerWidget {
         bottomNavigationBar: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
+              horizontal: 56.0,
               vertical: 10.0,
             ),
             // Tactile Editorial Analog pill capsule
@@ -60,40 +61,34 @@ class MainScaffold extends ConsumerWidget {
                 ),
               ),
               padding: const EdgeInsets.symmetric(
-                horizontal: 14.0,
-                vertical: 8.0,
+                horizontal: 12.0,
+                vertical: 7.0,
               ),
               child: GNav(
                 rippleColor: Colors.white24,
                 hoverColor: Colors.white12,
                 haptic: true,
                 tabBorderRadius: 28,
-                curve: Curves.easeOutExpo,
-                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOutCubic,
+                duration: const Duration(milliseconds: 180),
                 gap: 8,
                 color: Colors.white60,
                 activeColor: Colors.white,
-                iconSize: 22,
+                iconSize: 21,
                 tabBackgroundColor:
                     MemoriaTokens.primary, // Terracotta orange accent
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
+                  horizontal: 14,
+                  vertical: 9,
                 ),
                 selectedIndex: currentIndex,
                 onTabChange: (index) {
                   ref.read(navigationIndexProvider.notifier).state = index;
                 },
                 tabs: const [
-                  GButton(icon: Icons.camera_alt_outlined, text: 'Camera'),
-                  GButton(
-                    icon: Icons.calendar_month_outlined,
-                    text: 'Calendar',
-                  ),
-                  GButton(
-                    icon: Icons.photo_library_outlined,
-                    text: 'Scrapbook',
-                  ),
+                  GButton(icon: LucideIcons.camera, text: 'Camera'),
+                  GButton(icon: LucideIcons.calendarDays, text: 'Calendar'),
+                  GButton(icon: LucideIcons.images, text: 'Scrapbook'),
                 ],
               ),
             ),

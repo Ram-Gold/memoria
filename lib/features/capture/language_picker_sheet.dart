@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/theme/memoria_tokens.dart';
@@ -70,7 +71,7 @@ class LanguagePickerSheet extends ConsumerWidget {
                         color: isSelected ? MemoriaTokens.primaryDark : MemoriaTokens.onSurface,
                       ),
                     ),
-                    trailing: isSelected ? const Icon(Icons.check_circle, color: MemoriaTokens.primary) : null,
+                    trailing: isSelected ? const Icon(LucideIcons.circleCheck, color: MemoriaTokens.primary) : null,
                     onTap: () {
                       ref.read(activeLanguageProvider.notifier).state = lang;
                       Navigator.of(context).pop();
@@ -105,7 +106,7 @@ class LanguagePickerSheet extends ConsumerWidget {
                         color: isSelected ? MemoriaTokens.secondary : MemoriaTokens.onSurface,
                       ),
                     ),
-                    trailing: isSelected ? const Icon(Icons.check_circle, color: MemoriaTokens.secondary) : null,
+                    trailing: isSelected ? const Icon(LucideIcons.circleCheck, color: MemoriaTokens.secondary) : null,
                     onTap: () {
                       ref.read(activeLanguageProvider.notifier).state = lang;
                       Navigator.of(context).pop();

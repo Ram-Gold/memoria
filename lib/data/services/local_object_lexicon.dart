@@ -38,7 +38,7 @@ class LexiconEntry {
 }
 
 /// Comprehensive offline multilingual dictionary mapping 80+ everyday physical object classes
-/// (from standard COCO dataset detected by YOLO/ML Kit) into authentic Japanese, Filipino, and Spanish vocabulary.
+/// (from standard COCO dataset detected by on-device computer vision / ML Kit) into authentic Japanese, Filipino, and Spanish vocabulary.
 class LocalObjectLexicon {
   static const Map<String, String> _synonyms = {
     // Everyday kitchen / cafe / drinkware

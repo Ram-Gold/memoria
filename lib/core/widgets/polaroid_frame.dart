@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
 import '../theme/memoria_tokens.dart';
 import 'rubber_stamp.dart';
@@ -61,7 +62,7 @@ class PolaroidFrame extends StatelessWidget {
         photoContent = Container(
           color: MemoriaTokens.surfaceContainerHigh,
           child: const Center(
-            child: Icon(Icons.broken_image_outlined, color: MemoriaTokens.outline),
+            child: Icon(LucideIcons.imageOff, color: MemoriaTokens.outline),
           ),
         );
       }
