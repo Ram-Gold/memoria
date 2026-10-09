@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/memoria_tokens.dart';
 
 /// Analog Rubber Heart Ink Stamp (`#BA1A1A`)
@@ -54,7 +53,7 @@ class RubberStampWidget extends StatelessWidget {
               ),
               child: Center(
                 child: Icon(
-                  LucideIcons.heart,
+                  Icons.favorite,
                   color: MemoriaTokens.stampVermilion,
                   size: size * 0.52,
                 ),

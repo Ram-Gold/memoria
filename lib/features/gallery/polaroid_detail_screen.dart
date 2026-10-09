@@ -164,7 +164,7 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
           // Favorite rubber stamp toggle
           IconButton(
             icon: Icon(
-              LucideIcons.heart,
+              isFavorite ? Icons.favorite : LucideIcons.heart,
               color: isFavorite ? MemoriaTokens.stampVermilion : MemoriaTokens.outline,
             ),
             tooltip: 'Favorite Exposure',

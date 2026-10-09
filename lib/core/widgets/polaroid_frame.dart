@@ -24,6 +24,8 @@ class PolaroidFrame extends StatelessWidget {
   final double chinHeight;
   final double cardPadding;
   final bool isElevated;
+  final double? primaryFontSize;
+  final double? subtitleFontSize;
 
   const PolaroidFrame({
     super.key,
@@ -42,6 +44,8 @@ class PolaroidFrame extends StatelessWidget {
     this.chinHeight = 56.0,
     this.cardPadding = 10.0,
     this.isElevated = true,
+    this.primaryFontSize,
+    this.subtitleFontSize,
   });
 
   @override
@@ -122,7 +126,7 @@ class PolaroidFrame extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: MemoriaTokens.handwrittenChin(
-                          fontSize: chinHeight > 60 ? 28 : 20,
+                          fontSize: primaryFontSize ?? (chinHeight > 60 ? 28 : (chinHeight < 45 ? 15 : 20)),
                           color: MemoriaTokens.onSurface,
                         ),
                       ),
@@ -136,6 +140,8 @@ class PolaroidFrame extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: MemoriaTokens.bodySm(
                           color: MemoriaTokens.onSurfaceVariant,
+                        ).copyWith(
+                          fontSize: subtitleFontSize ?? (chinHeight < 45 ? 9.5 : null),
                         ),
                       ),
                     ],

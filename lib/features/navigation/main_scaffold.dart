@@ -45,7 +45,7 @@ class MainScaffold extends ConsumerWidget {
         bottomNavigationBar: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 56.0,
+              horizontal: 58.0,
               vertical: 10.0,
             ),
             // Tactile Editorial Analog pill capsule
