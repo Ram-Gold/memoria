@@ -30,10 +30,12 @@ class MockVisionService implements VisionService {
       seed = DateTime.now().microsecondsSinceEpoch & 0x7FFFFFFF;
     }
 
-    if (language.code == 'fil') {
+    if (language.code == 'fil' || language.code == 'tl') {
       return _generateFilipinoResult(sessionId, seed);
     } else if (language.code == 'ja') {
       return _generateJapaneseResult(sessionId, seed);
+    } else if (language.code == 'zh' || language.code.startsWith('zh')) {
+      return _generateMandarinResult(sessionId, seed);
     } else {
       return _generateSpanishResult(sessionId, seed, language);
     }
@@ -439,6 +441,112 @@ class MockVisionService implements VisionService {
     return AnalysisResult(
       sessionId: sessionId,
       languageCode: language.code,
+      primaryObjectId: selected.objects.first.id,
+      sceneDescription: selected.description,
+      detectedObjects: selected.objects,
+    );
+  }
+
+  AnalysisResult _generateMandarinResult(String sessionId, int seed) {
+    final scenarios = [
+      _SceneData(
+        description: 'Cozy study table with coffee and open book',
+        objects: [
+          const DetectedObject(
+            id: 'obj_01',
+            labelEn: 'Coffee Cup',
+            targetWord: '咖啡杯',
+            secondaryScript: 'kāfēibēi',
+            transliteration: 'kāfēibēi',
+            partOfSpeech: 'Noun',
+            difficultyLevel: 'HSK1',
+            confidence: 0.95,
+            box: [450, 680, 850, 920],
+          ),
+          const DetectedObject(
+            id: 'obj_02',
+            labelEn: 'Book',
+            targetWord: '书',
+            secondaryScript: 'shū',
+            transliteration: 'shū',
+            partOfSpeech: 'Noun',
+            difficultyLevel: 'HSK1',
+            confidence: 0.89,
+            box: [180, 160, 780, 700],
+          ),
+          const DetectedObject(
+            id: 'obj_03',
+            labelEn: 'Desk',
+            targetWord: '书桌',
+            secondaryScript: 'shūzhuō',
+            transliteration: 'shūzhuō',
+            partOfSpeech: 'Noun',
+            difficultyLevel: 'HSK2',
+            confidence: 0.55,
+            box: [50, 50, 950, 950],
+          ),
+        ],
+      ),
+      _SceneData(
+        description: 'Close-up photograph of hands holding a fountain pen',
+        objects: [
+          const DetectedObject(
+            id: 'obj_01',
+            labelEn: 'Hand',
+            targetWord: '手',
+            secondaryScript: 'shǒu',
+            transliteration: 'shǒu',
+            partOfSpeech: 'Noun',
+            difficultyLevel: 'HSK1',
+            confidence: 0.96,
+            box: [280, 220, 850, 780],
+          ),
+          const DetectedObject(
+            id: 'obj_02',
+            labelEn: 'Pen',
+            targetWord: '笔',
+            secondaryScript: 'bǐ',
+            transliteration: 'bǐ',
+            partOfSpeech: 'Noun',
+            difficultyLevel: 'HSK2',
+            confidence: 0.88,
+            box: [350, 300, 700, 650],
+          ),
+        ],
+      ),
+      _SceneData(
+        description: 'Warm cafe table with tea cup and dessert',
+        objects: [
+          const DetectedObject(
+            id: 'obj_01',
+            labelEn: 'Tea',
+            targetWord: '茶',
+            secondaryScript: 'chá',
+            transliteration: 'chá',
+            partOfSpeech: 'Noun',
+            difficultyLevel: 'HSK1',
+            confidence: 0.94,
+            box: [410, 560, 820, 880],
+          ),
+          const DetectedObject(
+            id: 'obj_02',
+            labelEn: 'Cake',
+            targetWord: '蛋糕',
+            secondaryScript: 'dàngāo',
+            transliteration: 'dàngāo',
+            partOfSpeech: 'Noun',
+            difficultyLevel: 'HSK2',
+            confidence: 0.86,
+            box: [310, 180, 870, 720],
+          ),
+        ],
+      ),
+    ];
+
+    final selected = scenarios[seed % scenarios.length];
+    return AnalysisResult(
+      sessionId: sessionId,
+      languageCode: 'zh',
       primaryObjectId: selected.objects.first.id,
       sceneDescription: selected.description,
       detectedObjects: selected.objects,

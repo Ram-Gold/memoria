@@ -110,71 +110,81 @@ class PolaroidFrame extends StatelessWidget {
           ),
 
           // The Signature Polaroid Chin Margin
-          Container(
-            constraints: BoxConstraints(minHeight: chinHeight),
-            padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (primaryText != null && primaryText!.isNotEmpty) ...[
-                      Text(
-                        primaryText!,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: MemoriaTokens.handwrittenChin(
-                          fontSize: primaryFontSize ?? (chinHeight > 60 ? 28 : (chinHeight < 45 ? 15 : 20)),
-                          color: MemoriaTokens.onSurface,
-                        ),
-                      ),
-                    ],
-                    if (subtitleText != null && subtitleText!.isNotEmpty) ...[
-                      const SizedBox(height: 1),
-                      Text(
-                        subtitleText!,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: MemoriaTokens.bodySm(
-                          color: MemoriaTokens.onSurfaceVariant,
-                        ).copyWith(
-                          fontSize: subtitleFontSize ?? (chinHeight < 45 ? 9.5 : null),
-                        ),
-                      ),
-                    ],
-                    if (filmMetaText != null && filmMetaText!.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        filmMetaText!,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: MemoriaTokens.telemetryMono(
-                          fontSize: 8.5,
-                          color: MemoriaTokens.outline,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-
-                // Rubber Heart Stamp on Chin
-                if (isStamped || onStampTap != null)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: RubberStampWidget(
-                      isStamped: isStamped,
-                      onTap: onStampTap,
-                      size: chinHeight > 60 ? 32 : 24,
+          if (chinHeight > 0 ||
+              (primaryText != null && primaryText!.isNotEmpty) ||
+              (subtitleText != null && subtitleText!.isNotEmpty) ||
+              isStamped ||
+              onStampTap != null)
+            Container(
+              constraints: BoxConstraints(minHeight: chinHeight),
+              padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(
+                      right: (isStamped || onStampTap != null) ? 28.0 : 0.0,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (primaryText != null && primaryText!.isNotEmpty) ...[
+                          Text(
+                            primaryText!,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: MemoriaTokens.handwrittenChin(
+                              fontSize: primaryFontSize ?? (chinHeight > 60 ? 28 : (chinHeight < 45 ? 15 : 20)),
+                              color: MemoriaTokens.onSurface,
+                            ),
+                          ),
+                        ],
+                        if (subtitleText != null && subtitleText!.isNotEmpty) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            subtitleText!,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: MemoriaTokens.bodySm(
+                              color: MemoriaTokens.onSurfaceVariant,
+                            ).copyWith(
+                              fontSize: subtitleFontSize ?? (chinHeight < 45 ? 9.5 : null),
+                            ),
+                          ),
+                        ],
+                        if (filmMetaText != null && filmMetaText!.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            filmMetaText!,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: MemoriaTokens.telemetryMono(
+                              fontSize: 8.5,
+                              color: MemoriaTokens.outline,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-              ],
+
+                  // Rubber Heart Stamp on Chin
+                  if (isStamped || onStampTap != null)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: RubberStampWidget(
+                        isStamped: isStamped,
+                        onTap: onStampTap,
+                        size: chinHeight > 60 ? 32 : 24,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

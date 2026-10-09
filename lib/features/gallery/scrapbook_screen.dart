@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,7 +27,6 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
   final PageFlipController _pageFlipController = PageFlipController();
 
   int _viewMode = 0; // 0: Turnable Journal, 1: Collections
-  int _currentPageIndex = 0; // 0-based page index
 
   @override
   void dispose() {
@@ -217,7 +217,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
             // ─────────────────────────────────────────────────────────────
             Expanded(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(_viewMode == 0 ? 0 : 10, 0, 10, 10),
+                padding: EdgeInsets.fromLTRB(_viewMode == 0 ? 0 : 10, 0, 10, 85),
                 child: _viewMode == 0
                     ? _buildTurnableJournal(asyncPolaroids, query)
                     : _buildCollectionsContainer(allPolaroidsAsync),
@@ -314,13 +314,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                               cornerTriggerAreaSize: 0.18,
                               swipeDistance: 25,
                             ),
-                            onPageChanged: (leftIndex, rightIndex) {
-                              if (mounted) {
-                                setState(() {
-                                  _currentPageIndex = leftIndex.clamp(0, totalPageCount - 1);
-                                });
-                              }
-                            },
+                            onPageChanged: (leftIndex, rightIndex) {},
                             builder: (context, pageIndex, pageConstraints) {
                               return _buildPolaroidPage(
                                 pageIndex: pageIndex,
@@ -336,14 +330,6 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                   ],
                 ),
               ),
-            ),
-
-            const SizedBox(height: 6),
-
-            // ─── TACTILE PAGE TURN INDICATOR & CONTROLS ─────────────────────
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: _buildPageIndicatorBar(totalPageCount),
             ),
           ],
         );
@@ -596,79 +582,6 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
     );
   }
 
-  /// Bottom pagination indicator with tap arrow controls
-  Widget _buildPageIndicatorBar(int totalPages) {
-    final currentDisplayPage = (_currentPageIndex + 1).clamp(1, totalPages);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
-        border: Border.all(color: MemoriaTokens.polaroidBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0C000000),
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Previous Page Button
-          GestureDetector(
-            onTap: _currentPageIndex > 0
-                ? () {
-                    HapticFeedback.selectionClick();
-                    _pageFlipController.previousPage();
-                  }
-                : null,
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Icon(
-                LucideIcons.chevronLeft,
-                size: 16,
-                color: _currentPageIndex > 0 ? MemoriaTokens.primary : MemoriaTokens.outline.withValues(alpha: 0.4),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Page Index Label
-          Text(
-            'Page $currentDisplayPage of $totalPages',
-            style: MemoriaTokens.labelSm(color: MemoriaTokens.onSurface).copyWith(fontSize: 11),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Next Page Button
-          GestureDetector(
-            onTap: _currentPageIndex < totalPages - 1
-                ? () {
-                    HapticFeedback.selectionClick();
-                    _pageFlipController.nextPage();
-                  }
-                : null,
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Icon(
-                LucideIcons.chevronRight,
-                size: 16,
-                color: _currentPageIndex < totalPages - 1
-                    ? MemoriaTokens.primary
-                    : MemoriaTokens.outline.withValues(alpha: 0.4),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Collections View: Language-grouped albums
   Widget _buildCollectionsContainer(AsyncValue<List<Polaroid>> allPolaroidsAsync) {
     return allPolaroidsAsync.when(
@@ -723,18 +636,24 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                   ),
                   child: Row(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(MemoriaTokens.radiusSm),
-                        child: SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: PolaroidFrame(
-                            imagePath: latest.imagePath,
-                            format: PolaroidFormat.square,
-                            chinHeight: 0,
-                            cardPadding: 2,
-                            isElevated: false,
-                          ),
+                      Container(
+                        width: 50,
+                        height: 50,
+                        padding: const EdgeInsets.all(2.5),
+                        decoration: BoxDecoration(
+                          color: MemoriaTokens.polaroidCard,
+                          borderRadius: BorderRadius.circular(MemoriaTokens.radiusSm),
+                          border: Border.all(color: MemoriaTokens.polaroidBorder, width: 1),
+                          boxShadow: MemoriaTokens.shadowLevel1,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: latest.imagePath.isNotEmpty && File(latest.imagePath).existsSync()
+                              ? Image.file(File(latest.imagePath), fit: BoxFit.cover)
+                              : Container(
+                                  color: MemoriaTokens.surfaceContainerHigh,
+                                  child: const Icon(LucideIcons.image, size: 20, color: MemoriaTokens.outline),
+                                ),
                         ),
                       ),
                       const SizedBox(width: 12),

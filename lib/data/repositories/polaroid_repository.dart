@@ -110,10 +110,11 @@ class PolaroidRepository {
         LOWER(COALESCE(p.secondary_script, '')) LIKE ? OR
         LOWER(COALESCE(p.transliteration, '')) LIKE ? OR
         LOWER(o.label_en) LIKE ? OR
-        LOWER(o.target_word) LIKE ?
+        LOWER(o.target_word) LIKE ? OR
+        LOWER(p.language_code) = ?
       )
     ''';
-    final args = <dynamic>[pattern, pattern, pattern, pattern, pattern];
+    final args = <dynamic>[pattern, pattern, pattern, pattern, pattern, cleanQuery];
 
     if (languageCode != null && languageCode.isNotEmpty) {
       sql += ' AND p.language_code = ?';

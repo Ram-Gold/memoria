@@ -68,6 +68,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return '${months[d.month - 1]} ${d.year}';
   }
 
+  String _formatFullDate(DateTime d) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return '${months[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
   String _formatDateKey(DateTime d) {
     return '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
@@ -387,8 +395,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Widget _buildDailyLogSection(List<Polaroid> exposures) {
-    final dateStr = _selectedDate != null ? _formatMonthYear(_selectedDate!) : '';
-    final dayStr = _selectedDate != null ? '${_selectedDate!.day}' : '';
+    final dateStr = _selectedDate != null ? _formatFullDate(_selectedDate!) : '';
 
     return Container(
       decoration: BoxDecoration(
@@ -409,7 +416,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   const Icon(LucideIcons.bookOpen, color: MemoriaTokens.primary, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'Daily Log • $dateStr $dayStr',
+                    'Daily Log • $dateStr',
                     style: MemoriaTokens.headlineSm(),
                   ),
                 ],

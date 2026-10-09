@@ -145,6 +145,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
+  ffi_leak_tracker:
+    dependency: transitive
+    description:
+      name: ffi_leak_tracker
+      sha256: "4093d4ef9ca06ffe2786e73bfb25e22aa92112b9bb4ec941f11e3e6b61489a97"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2"
+  file:
+    dependency: transitive
+    description:
+      name: file
+      sha256: a3b4f84adafef897088c160faf7dfffb7696046cb13ae90b508c2cbc95d3b8d4
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.0.1"
   file_selector_linux:
     dependency: transitive
     description:
@@ -248,6 +264,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  gal:
+    dependency: "direct main"
+    description:
+      name: gal
+      sha256: f71e79840fe023a21f2f949771375444b6efcd34b9e625d5f4f5504971380a77
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.3"
   go_router:
     dependency: "direct main"
     description:
@@ -656,6 +680,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.28.0"
+  sealed_countries:
+    dependency: transitive
+    description:
+      name: sealed_countries
+      sha256: cab25d9244502220f69069d569dedb39ba7983113746ba44b9ec05113c72ee81
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.1"
+  sealed_currencies:
+    dependency: transitive
+    description:
+      name: sealed_currencies
+      sha256: b8aa884a4b5c061883d818e8e58f62b9057d59530b71660e4ced4edfa6b514fc
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.1"
+  sealed_languages:
+    dependency: transitive
+    description:
+      name: sealed_languages
+      sha256: fbe2763bfac54ee8a52674c61588c4f1f9f260fd7db3782cbff3d154e952a918
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.1"
   sensors_plus:
     dependency: "direct main"
     description:
@@ -672,6 +720,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  share_plus:
+    dependency: "direct main"
+    description:
+      name: share_plus
+      sha256: db40767f130189d53f3ae8a6393c217ff4a492da1baff718a9873679c0c00224
+      url: "https://pub.dev"
+    source: hosted
+    version: "13.3.1"
+  share_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: share_plus_platform_interface
+      sha256: "365ef7379fc22507256adda3385152942ffce08935452bc972c2e52a0bebae41"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.0"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -901,6 +965,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  win32:
+    dependency: transitive
+    description:
+      name: win32
+      sha256: a0b93865d5644f11cf6a8c3f6db909f1ec168958b5805f6cc684adea957cd63d
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.4.0"
+  world_flags:
+    dependency: "direct main"
+    description:
+      name: world_flags
+      sha256: "2ca69fe3cc659a1a75a746779f592dcaf1dfc2c5b328749bff369fff065f7343"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.0"
   xdg_directories:
     dependency: transitive
     description:

@@ -422,11 +422,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
   void _cycleLanguage() {
     final active = ref.read(activeLanguageProvider);
     HapticFeedback.selectionClick();
-    if (active.code == 'ja') {
-      ref.read(activeLanguageProvider.notifier).state = LanguageRegistry.filipino;
-    } else {
-      ref.read(activeLanguageProvider.notifier).state = LanguageRegistry.japanese;
-    }
+    final all = LanguageRegistry.presets;
+    final currentIndex = all.indexWhere((l) => l.code == active.code);
+    final nextIndex = (currentIndex + 1) % all.length;
+    ref.read(activeLanguageProvider.notifier).state = all[nextIndex];
   }
 
   void _showLanguagePicker() {

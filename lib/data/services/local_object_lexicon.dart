@@ -150,9 +150,19 @@ class LocalObjectLexicon {
     'cycle': 'bicycle',
     'car': 'car',
     'automobile': 'car',
-    'vehicle': 'car',
-    'motorcycle': 'motorcycle',
     'traffic light': 'traffic light',
+
+    // Human & Body Parts
+    'hand': 'hand',
+    'hands': 'hand',
+    'palm': 'hand',
+    'finger': 'hand',
+    'fingers': 'hand',
+    'arm': 'hand',
+    'wrist': 'hand',
+    'person': 'person',
+    'human': 'person',
+    'face': 'face',
   };
 
   /// Normalizes incoming detector labels into canonical dictionary keys
@@ -200,6 +210,9 @@ class LocalObjectLexicon {
       case 'cat':
       case 'dog':
       case 'bird':
+      case 'hand':
+      case 'person':
+      case 'face':
         return 1.6;
       case 'laptop':
       case 'backpack':
@@ -580,6 +593,32 @@ class LocalObjectLexicon {
       partOfSpeech: 'Noun',
       difficultyLevel: 'N5',
     ),
+
+    // Human & Body Parts
+    'hand': const LexiconEntry(
+      labelEn: 'Hand',
+      targetWord: '手',
+      secondaryScript: 'て',
+      transliteration: 'te',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'person': const LexiconEntry(
+      labelEn: 'Person',
+      targetWord: '人',
+      secondaryScript: 'ひと',
+      transliteration: 'hito',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'face': const LexiconEntry(
+      labelEn: 'Face',
+      targetWord: '顔',
+      secondaryScript: 'かお',
+      transliteration: 'kao',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
   };
 
   // -------------------------------------------------------------
@@ -922,6 +961,32 @@ class LocalObjectLexicon {
       partOfSpeech: 'Noun',
       difficultyLevel: 'A1',
     ),
+
+    // Human & Body Parts
+    'hand': LexiconEntry(
+      labelEn: 'Hand',
+      targetWord: BaybayinEngine.transliterate('kamay'),
+      secondaryScript: 'kamay',
+      transliteration: '[ka-may]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'person': LexiconEntry(
+      labelEn: 'Person',
+      targetWord: BaybayinEngine.transliterate('tao'),
+      secondaryScript: 'tao',
+      transliteration: '[ta-o]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'face': LexiconEntry(
+      labelEn: 'Face',
+      targetWord: BaybayinEngine.transliterate('mukha'),
+      secondaryScript: 'mukha',
+      transliteration: '[muk-ha]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
   };
 
   // -------------------------------------------------------------
@@ -1210,9 +1275,406 @@ class LocalObjectLexicon {
       partOfSpeech: 'Noun • m',
       difficultyLevel: 'A1',
     ),
+
+    // Human & Body Parts
+    'hand': const LexiconEntry(
+      labelEn: 'Hand',
+      targetWord: 'Mano',
+      secondaryScript: 'la mano',
+      transliteration: '[mah-noh]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'person': const LexiconEntry(
+      labelEn: 'Person',
+      targetWord: 'Persona',
+      secondaryScript: 'la persona',
+      transliteration: '[pehr-soh-nah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'face': const LexiconEntry(
+      labelEn: 'Face',
+      targetWord: 'Cara',
+      secondaryScript: 'la cara',
+      transliteration: '[kah-rah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
   };
 
-  /// Lookup a detected class name for a given language code (ja, fil, es) with synonym normalization.
+  // -------------------------------------------------------------
+  // MANDARIN CHINESE (Simplified Hanzi / Pinyin with tones / HSK)
+  // -------------------------------------------------------------
+  static final Map<String, LexiconEntry> _mandarin = {
+    // Everyday kitchen / cafe / drinkware
+    'cup': const LexiconEntry(
+      labelEn: 'Cup',
+      targetWord: '杯子',
+      secondaryScript: 'bēizi',
+      transliteration: 'bēizi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'mug': const LexiconEntry(
+      labelEn: 'Mug',
+      targetWord: '马克杯',
+      secondaryScript: 'mǎkèbēi',
+      transliteration: 'mǎkèbēi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'coffee cup': const LexiconEntry(
+      labelEn: 'Coffee Cup',
+      targetWord: '咖啡杯',
+      secondaryScript: 'kāfēibēi',
+      transliteration: 'kāfēibēi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'coffee': const LexiconEntry(
+      labelEn: 'Coffee',
+      targetWord: '咖啡',
+      secondaryScript: 'kāfēi',
+      transliteration: 'kāfēi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'tea': const LexiconEntry(
+      labelEn: 'Tea',
+      targetWord: '茶',
+      secondaryScript: 'chá',
+      transliteration: 'chá',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'water': const LexiconEntry(
+      labelEn: 'Water',
+      targetWord: '水',
+      secondaryScript: 'shuǐ',
+      transliteration: 'shuǐ',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'bottle': const LexiconEntry(
+      labelEn: 'Bottle',
+      targetWord: '瓶子',
+      secondaryScript: 'píngzi',
+      transliteration: 'píngzi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'wine glass': const LexiconEntry(
+      labelEn: 'Wine Glass',
+      targetWord: '酒杯',
+      secondaryScript: 'jiǔbēi',
+      transliteration: 'jiǔbēi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'bowl': const LexiconEntry(
+      labelEn: 'Bowl',
+      targetWord: '碗',
+      secondaryScript: 'wǎn',
+      transliteration: 'wǎn',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'plate': const LexiconEntry(
+      labelEn: 'Plate',
+      targetWord: '盘子',
+      secondaryScript: 'pánzi',
+      transliteration: 'pánzi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'tableware': const LexiconEntry(
+      labelEn: 'Tableware',
+      targetWord: '餐具',
+      secondaryScript: 'cānjù',
+      transliteration: 'cānjù',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK3',
+    ),
+    'fork': const LexiconEntry(
+      labelEn: 'Fork',
+      targetWord: '叉子',
+      secondaryScript: 'chāzi',
+      transliteration: 'chāzi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'spoon': const LexiconEntry(
+      labelEn: 'Spoon',
+      targetWord: '勺子',
+      secondaryScript: 'sháozi',
+      transliteration: 'sháozi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'knife': const LexiconEntry(
+      labelEn: 'Knife',
+      targetWord: '刀',
+      secondaryScript: 'dāo',
+      transliteration: 'dāo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+
+    // Furniture & Interior
+    'chair': const LexiconEntry(
+      labelEn: 'Chair',
+      targetWord: '椅子',
+      secondaryScript: 'yǐzi',
+      transliteration: 'yǐzi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'couch': const LexiconEntry(
+      labelEn: 'Sofa',
+      targetWord: '沙发',
+      secondaryScript: 'shāfā',
+      transliteration: 'shāfā',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'potted plant': const LexiconEntry(
+      labelEn: 'Potted Plant',
+      targetWord: '盆栽',
+      secondaryScript: 'pénzāi',
+      transliteration: 'pénzāi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK3',
+    ),
+    'bed': const LexiconEntry(
+      labelEn: 'Bed',
+      targetWord: '床',
+      secondaryScript: 'chuáng',
+      transliteration: 'chuáng',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'dining table': const LexiconEntry(
+      labelEn: 'Dining Table',
+      targetWord: '餐桌',
+      secondaryScript: 'cānzhuō',
+      transliteration: 'cānzhuō',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'desk': const LexiconEntry(
+      labelEn: 'Desk',
+      targetWord: '书桌',
+      secondaryScript: 'shūzhuō',
+      transliteration: 'shūzhuō',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'window': const LexiconEntry(
+      labelEn: 'Window',
+      targetWord: '窗户',
+      secondaryScript: 'chuānghu',
+      transliteration: 'chuānghu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'door': const LexiconEntry(
+      labelEn: 'Door',
+      targetWord: '门',
+      secondaryScript: 'mén',
+      transliteration: 'mén',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+
+    // Tech & Personal Items
+    'laptop': const LexiconEntry(
+      labelEn: 'Laptop',
+      targetWord: '笔记本电脑',
+      secondaryScript: 'bǐjìběn diànnǎo',
+      transliteration: 'bǐjìběn diànnǎo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'cell phone': const LexiconEntry(
+      labelEn: 'Mobile Phone',
+      targetWord: '手机',
+      secondaryScript: 'shǒujī',
+      transliteration: 'shǒujī',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'book': const LexiconEntry(
+      labelEn: 'Book',
+      targetWord: '书',
+      secondaryScript: 'shū',
+      transliteration: 'shū',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'pen': const LexiconEntry(
+      labelEn: 'Pen',
+      targetWord: '笔',
+      secondaryScript: 'bǐ',
+      transliteration: 'bǐ',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'backpack': const LexiconEntry(
+      labelEn: 'Backpack',
+      targetWord: '背包',
+      secondaryScript: 'bēibāo',
+      transliteration: 'bēibāo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'umbrella': const LexiconEntry(
+      labelEn: 'Umbrella',
+      targetWord: '雨伞',
+      secondaryScript: 'yǔsǎn',
+      transliteration: 'yǔsǎn',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'clock': const LexiconEntry(
+      labelEn: 'Clock',
+      targetWord: '钟表',
+      secondaryScript: 'zhōngbiǎo',
+      transliteration: 'zhōngbiǎo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+
+    // Animals & Nature
+    'cat': const LexiconEntry(
+      labelEn: 'Cat',
+      targetWord: '猫',
+      secondaryScript: 'māo',
+      transliteration: 'māo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'dog': const LexiconEntry(
+      labelEn: 'Dog',
+      targetWord: '狗',
+      secondaryScript: 'gǒu',
+      transliteration: 'gǒu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'bird': const LexiconEntry(
+      labelEn: 'Bird',
+      targetWord: '鸟',
+      secondaryScript: 'niǎo',
+      transliteration: 'niǎo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'tree': const LexiconEntry(
+      labelEn: 'Tree',
+      targetWord: '树',
+      secondaryScript: 'shù',
+      transliteration: 'shù',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+
+    // Foods
+    'apple': const LexiconEntry(
+      labelEn: 'Apple',
+      targetWord: '苹果',
+      secondaryScript: 'píngguǒ',
+      transliteration: 'píngguǒ',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'banana': const LexiconEntry(
+      labelEn: 'Banana',
+      targetWord: '香蕉',
+      secondaryScript: 'xiāngjiāo',
+      transliteration: 'xiāngjiāo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'orange': const LexiconEntry(
+      labelEn: 'Orange',
+      targetWord: '橘子',
+      secondaryScript: 'júzi',
+      transliteration: 'júzi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'pizza': const LexiconEntry(
+      labelEn: 'Pizza',
+      targetWord: '比萨',
+      secondaryScript: 'bǐsà',
+      transliteration: 'bǐsà',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'cake': const LexiconEntry(
+      labelEn: 'Cake',
+      targetWord: '蛋糕',
+      secondaryScript: 'dàngāo',
+      transliteration: 'dàngāo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+
+    // Travel & Urban
+    'bicycle': const LexiconEntry(
+      labelEn: 'Bicycle',
+      targetWord: '自行车',
+      secondaryScript: 'zìxíngchē',
+      transliteration: 'zìxíngchē',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'car': const LexiconEntry(
+      labelEn: 'Car',
+      targetWord: '汽车',
+      secondaryScript: 'qìchē',
+      transliteration: 'qìchē',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'motorcycle': const LexiconEntry(
+      labelEn: 'Motorcycle',
+      targetWord: '摩托车',
+      secondaryScript: 'mótuōchē',
+      transliteration: 'mótuōchē',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK3',
+    ),
+
+    // Human & Body Parts
+    'hand': const LexiconEntry(
+      labelEn: 'Hand',
+      targetWord: '手',
+      secondaryScript: 'shǒu',
+      transliteration: 'shǒu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'person': const LexiconEntry(
+      labelEn: 'Person',
+      targetWord: '人',
+      secondaryScript: 'rén',
+      transliteration: 'rén',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'face': const LexiconEntry(
+      labelEn: 'Face',
+      targetWord: '脸',
+      secondaryScript: 'liǎn',
+      transliteration: 'liǎn',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+  };
+
+  /// Lookup a detected class name for a given language code (ja, fil, es, zh) with synonym normalization.
   static LexiconEntry? lookup({
     required String className,
     required String langCode,
@@ -1223,6 +1685,8 @@ class LocalObjectLexicon {
       return _japanese[key];
     } else if (code == 'fil' || code == 'tl') {
       return _filipino[key];
+    } else if (code == 'zh' || code.startsWith('zh')) {
+      return _mandarin[key];
     } else {
       return _spanish[key];
     }
@@ -1231,7 +1695,10 @@ class LocalObjectLexicon {
   /// Check if a detected class has rich offline mappings
   static bool hasMapping(String className) {
     final key = normalizeClassName(className);
-    return _japanese.containsKey(key) || _filipino.containsKey(key) || _spanish.containsKey(key);
+    return _japanese.containsKey(key) ||
+        _filipino.containsKey(key) ||
+        _spanish.containsKey(key) ||
+        _mandarin.containsKey(key);
   }
 
   /// Synthesizes a valid, pedagogical LexiconEntry even if the exact word isn't pre-seeded,
@@ -1264,6 +1731,15 @@ class LocalObjectLexicon {
         transliteration: cleanLabel.toLowerCase(),
         partOfSpeech: 'Noun',
         difficultyLevel: 'N5',
+      );
+    } else if (code == 'zh' || code.startsWith('zh')) {
+      return LexiconEntry(
+        labelEn: cleanLabel,
+        targetWord: cleanLabel,
+        secondaryScript: cleanLabel.toLowerCase(),
+        transliteration: cleanLabel.toLowerCase(),
+        partOfSpeech: 'Noun',
+        difficultyLevel: 'HSK1',
       );
     } else {
       return LexiconEntry(
