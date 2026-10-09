@@ -19,8 +19,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -62,6 +63,23 @@ class DatabaseHelper {
         FOREIGN KEY (polaroid_id) REFERENCES memoria_polaroids (id) ON DELETE CASCADE
       )
     ''');
+
+    await _createIndexes(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createIndexes(db);
+    }
+  }
+
+  Future<void> _createIndexes(Database db) async {
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_polaroids_lang_created ON memoria_polaroids (language_code, created_at DESC)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_polaroids_selected_word ON memoria_polaroids (selected_word)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_polaroids_favorite ON memoria_polaroids (is_favorite)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_objects_polaroid_id ON memoria_detected_objects (polaroid_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_objects_label_en ON memoria_detected_objects (label_en)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_objects_target_word ON memoria_detected_objects (target_word)');
   }
 
   Future<void> close() async {
@@ -71,3 +89,4 @@ class DatabaseHelper {
     }
   }
 }
+

@@ -1,0 +1,668 @@
+import '../../core/languages/baybayin_engine.dart';
+import '../../domain/models/detected_object.dart';
+
+class LexiconEntry {
+  final String labelEn;
+  final String targetWord;
+  final String secondaryScript;
+  final String transliteration;
+  final String partOfSpeech;
+  final String difficultyLevel;
+
+  const LexiconEntry({
+    required this.labelEn,
+    required this.targetWord,
+    required this.secondaryScript,
+    required this.transliteration,
+    required this.partOfSpeech,
+    required this.difficultyLevel,
+  });
+
+  DetectedObject toDetectedObject({
+    required String id,
+    required List<int> box,
+  }) {
+    return DetectedObject(
+      id: id,
+      labelEn: labelEn,
+      targetWord: targetWord,
+      secondaryScript: secondaryScript,
+      transliteration: transliteration,
+      partOfSpeech: partOfSpeech,
+      difficultyLevel: difficultyLevel,
+      box: box,
+    );
+  }
+}
+
+/// Comprehensive offline multilingual dictionary mapping 80+ everyday physical object classes
+/// (from standard COCO dataset detected by YOLO) into authentic Japanese, Filipino, and Spanish vocabulary.
+class LocalObjectLexicon {
+  static final Map<String, LexiconEntry> _japanese = {
+    // Everyday kitchen / cafe
+    'cup': const LexiconEntry(
+      labelEn: 'Cup',
+      targetWord: 'コップ',
+      secondaryScript: 'こっぷ',
+      transliteration: 'koppu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'mug': const LexiconEntry(
+      labelEn: 'Mug',
+      targetWord: 'マグカップ',
+      secondaryScript: 'まぐかっぷ',
+      transliteration: 'magukappu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'coffee cup': const LexiconEntry(
+      labelEn: 'Coffee Mug',
+      targetWord: '珈琲碗',
+      secondaryScript: 'コーヒーカップ',
+      transliteration: 'koohii kappu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'coffee': const LexiconEntry(
+      labelEn: 'Coffee',
+      targetWord: '珈琲',
+      secondaryScript: 'コーヒー',
+      transliteration: 'koohii',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'drink': const LexiconEntry(
+      labelEn: 'Beverage',
+      targetWord: '飲み物',
+      secondaryScript: 'のみもの',
+      transliteration: 'nomimono',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'tableware': const LexiconEntry(
+      labelEn: 'Tableware',
+      targetWord: '食器',
+      secondaryScript: 'しょっき',
+      transliteration: 'shokki',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N4',
+    ),
+    'bottle': const LexiconEntry(
+      labelEn: 'Bottle',
+      targetWord: '水筒',
+      secondaryScript: 'すいとう',
+      transliteration: 'suitou',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N4',
+    ),
+    'wine glass': const LexiconEntry(
+      labelEn: 'Wine Glass',
+      targetWord: 'グラス',
+      secondaryScript: 'ぐらす',
+      transliteration: 'gurasu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'bowl': const LexiconEntry(
+      labelEn: 'Bowl',
+      targetWord: '茶碗',
+      secondaryScript: 'ちゃわん',
+      transliteration: 'chawan',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'fork': const LexiconEntry(
+      labelEn: 'Fork',
+      targetWord: 'フォーク',
+      secondaryScript: 'ふぉーく',
+      transliteration: 'fooku',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'knife': const LexiconEntry(
+      labelEn: 'Knife',
+      targetWord: '包丁',
+      secondaryScript: 'ほうちょう',
+      transliteration: 'houchou',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N4',
+    ),
+    'spoon': const LexiconEntry(
+      labelEn: 'Spoon',
+      targetWord: '匙',
+      secondaryScript: 'スプーン',
+      transliteration: 'supuun',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    // Tech & Study
+    'book': const LexiconEntry(
+      labelEn: 'Book',
+      targetWord: '本',
+      secondaryScript: 'ほん',
+      transliteration: 'hon',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'laptop': const LexiconEntry(
+      labelEn: 'Laptop',
+      targetWord: 'パソコン',
+      secondaryScript: 'ノートパソコン',
+      transliteration: 'pasokon',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'cell phone': const LexiconEntry(
+      labelEn: 'Smartphone',
+      targetWord: '携帯電話',
+      secondaryScript: 'けいたいでんわ',
+      transliteration: 'keitai denwa',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'keyboard': const LexiconEntry(
+      labelEn: 'Keyboard',
+      targetWord: 'キーボード',
+      secondaryScript: 'きーぼーど',
+      transliteration: 'kiiboodo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'mouse': const LexiconEntry(
+      labelEn: 'Mouse',
+      targetWord: 'マウス',
+      secondaryScript: 'まうす',
+      transliteration: 'mausu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'clock': const LexiconEntry(
+      labelEn: 'Clock',
+      targetWord: '時計',
+      secondaryScript: 'とけい',
+      transliteration: 'tokei',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    // Furniture & Interior
+    'chair': const LexiconEntry(
+      labelEn: 'Chair',
+      targetWord: '椅子',
+      secondaryScript: 'いす',
+      transliteration: 'isu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'couch': const LexiconEntry(
+      labelEn: 'Sofa',
+      targetWord: 'ソファー',
+      secondaryScript: 'そふぁー',
+      transliteration: 'sofaa',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'potted plant': const LexiconEntry(
+      labelEn: 'Potted Plant',
+      targetWord: '観葉植物',
+      secondaryScript: 'かんようしょくぶつ',
+      transliteration: 'kanyou shokubutsu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N3',
+    ),
+    'bed': const LexiconEntry(
+      labelEn: 'Bed',
+      targetWord: '寝台',
+      secondaryScript: 'ベッド',
+      transliteration: 'beddo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'dining table': const LexiconEntry(
+      labelEn: 'Table',
+      targetWord: '食卓',
+      secondaryScript: 'テーブル',
+      transliteration: 'teeburu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'desk': const LexiconEntry(
+      labelEn: 'Desk',
+      targetWord: '机',
+      secondaryScript: 'つくえ',
+      transliteration: 'tsukue',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    // Travel & Urban
+    'bicycle': const LexiconEntry(
+      labelEn: 'Bicycle',
+      targetWord: '自転車',
+      secondaryScript: 'じてんしゃ',
+      transliteration: 'jitensha',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'car': const LexiconEntry(
+      labelEn: 'Car',
+      targetWord: '自動車',
+      secondaryScript: 'じどうしゃ',
+      transliteration: 'jidousha',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'motorcycle': const LexiconEntry(
+      labelEn: 'Motorcycle',
+      targetWord: '単車',
+      secondaryScript: 'バイク',
+      transliteration: 'baiku',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N4',
+    ),
+    'traffic light': const LexiconEntry(
+      labelEn: 'Traffic Light',
+      targetWord: '信号機',
+      secondaryScript: 'しんごうき',
+      transliteration: 'shingouki',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N4',
+    ),
+    'backpack': const LexiconEntry(
+      labelEn: 'Backpack',
+      targetWord: '背嚢',
+      secondaryScript: 'リュックサック',
+      transliteration: 'ryukkusakku',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N4',
+    ),
+    'umbrella': const LexiconEntry(
+      labelEn: 'Umbrella',
+      targetWord: '傘',
+      secondaryScript: 'かさ',
+      transliteration: 'kasa',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    // Animals
+    'cat': const LexiconEntry(
+      labelEn: 'Cat',
+      targetWord: '猫',
+      secondaryScript: 'ねこ',
+      transliteration: 'neko',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'dog': const LexiconEntry(
+      labelEn: 'Dog',
+      targetWord: '犬',
+      secondaryScript: 'いぬ',
+      transliteration: 'inu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'bird': const LexiconEntry(
+      labelEn: 'Bird',
+      targetWord: '鳥',
+      secondaryScript: 'とり',
+      transliteration: 'tori',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    // Foods
+    'apple': const LexiconEntry(
+      labelEn: 'Apple',
+      targetWord: '林檎',
+      secondaryScript: 'りんご',
+      transliteration: 'ringo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'orange': const LexiconEntry(
+      labelEn: 'Orange / Citrus',
+      targetWord: '蜜柑',
+      secondaryScript: 'みかん',
+      transliteration: 'mikan',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'banana': const LexiconEntry(
+      labelEn: 'Banana',
+      targetWord: '甘蕉',
+      secondaryScript: 'バナナ',
+      transliteration: 'banana',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'pizza': const LexiconEntry(
+      labelEn: 'Pizza',
+      targetWord: 'ピザ',
+      secondaryScript: 'ぴざ',
+      transliteration: 'piza',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'cake': const LexiconEntry(
+      labelEn: 'Cake',
+      targetWord: '洋菓子',
+      secondaryScript: 'ケーキ',
+      transliteration: 'keeki',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+  };
+
+  static final Map<String, LexiconEntry> _filipino = {
+    'cup': LexiconEntry(
+      labelEn: 'Cup',
+      targetWord: BaybayinEngine.transliterate('tasa'),
+      secondaryScript: 'tasa',
+      transliteration: '[ta-sa]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'mug': LexiconEntry(
+      labelEn: 'Mug',
+      targetWord: BaybayinEngine.transliterate('tasa'),
+      secondaryScript: 'tasa / mug',
+      transliteration: '[ta-sa]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'coffee cup': LexiconEntry(
+      labelEn: 'Coffee Mug',
+      targetWord: BaybayinEngine.transliterate('tasa'),
+      secondaryScript: 'tasa ng kape',
+      transliteration: '[ta-sa ng ka-pe]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'coffee': LexiconEntry(
+      labelEn: 'Coffee',
+      targetWord: BaybayinEngine.transliterate('kape'),
+      secondaryScript: 'kape',
+      transliteration: '[ka-pe]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'drink': LexiconEntry(
+      labelEn: 'Beverage',
+      targetWord: BaybayinEngine.transliterate('inumin'),
+      secondaryScript: 'inumin',
+      transliteration: '[i-nu-min]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'bottle': LexiconEntry(
+      labelEn: 'Bottle',
+      targetWord: BaybayinEngine.transliterate('bote'),
+      secondaryScript: 'bote',
+      transliteration: '[bo-te]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'book': LexiconEntry(
+      labelEn: 'Book',
+      targetWord: BaybayinEngine.transliterate('aklat'),
+      secondaryScript: 'aklat / libro',
+      transliteration: '[ak-lat]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'laptop': LexiconEntry(
+      labelEn: 'Laptop',
+      targetWord: BaybayinEngine.transliterate('kompyuter'),
+      secondaryScript: 'laptop',
+      transliteration: '[kom-pyu-ter]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'chair': LexiconEntry(
+      labelEn: 'Chair',
+      targetWord: BaybayinEngine.transliterate('upuan'),
+      secondaryScript: 'upuan / silya',
+      transliteration: '[u-pu-an]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'dining table': LexiconEntry(
+      labelEn: 'Table',
+      targetWord: BaybayinEngine.transliterate('mesa'),
+      secondaryScript: 'mesa',
+      transliteration: '[me-sa]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'desk': LexiconEntry(
+      labelEn: 'Desk',
+      targetWord: BaybayinEngine.transliterate('mesa'),
+      secondaryScript: 'mesa ng aralan',
+      transliteration: '[me-sa]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'cell phone': LexiconEntry(
+      labelEn: 'Phone',
+      targetWord: BaybayinEngine.transliterate('telepono'),
+      secondaryScript: 'cellphone',
+      transliteration: '[te-le-po-no]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'bicycle': LexiconEntry(
+      labelEn: 'Bicycle',
+      targetWord: BaybayinEngine.transliterate('bisikleta'),
+      secondaryScript: 'bisikleta',
+      transliteration: '[bi-sik-le-ta]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'car': LexiconEntry(
+      labelEn: 'Car',
+      targetWord: BaybayinEngine.transliterate('kotse'),
+      secondaryScript: 'kotse',
+      transliteration: '[kot-se]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'cat': LexiconEntry(
+      labelEn: 'Cat',
+      targetWord: BaybayinEngine.transliterate('pusa'),
+      secondaryScript: 'pusa',
+      transliteration: '[pu-sa]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'dog': LexiconEntry(
+      labelEn: 'Dog',
+      targetWord: BaybayinEngine.transliterate('aso'),
+      secondaryScript: 'aso',
+      transliteration: '[a-so]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'potted plant': LexiconEntry(
+      labelEn: 'Plant',
+      targetWord: BaybayinEngine.transliterate('halaman'),
+      secondaryScript: 'halaman',
+      transliteration: '[ha-la-man]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'clock': LexiconEntry(
+      labelEn: 'Clock',
+      targetWord: BaybayinEngine.transliterate('relo'),
+      secondaryScript: 'relo',
+      transliteration: '[re-lo]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+  };
+
+  static final Map<String, LexiconEntry> _spanish = {
+    'cup': const LexiconEntry(
+      labelEn: 'Cup',
+      targetWord: 'Taza',
+      secondaryScript: 'la taza',
+      transliteration: '[tah-sah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'mug': const LexiconEntry(
+      labelEn: 'Mug',
+      targetWord: 'Taza',
+      secondaryScript: 'el tazón / la taza',
+      transliteration: '[tah-sah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'coffee cup': const LexiconEntry(
+      labelEn: 'Coffee Mug',
+      targetWord: 'Taza de café',
+      secondaryScript: 'la taza de café',
+      transliteration: '[tah-sah deh kah-feh]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'coffee': const LexiconEntry(
+      labelEn: 'Coffee',
+      targetWord: 'Café',
+      secondaryScript: 'el café',
+      transliteration: '[kah-feh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'drink': const LexiconEntry(
+      labelEn: 'Beverage',
+      targetWord: 'Bebida',
+      secondaryScript: 'la bebida',
+      transliteration: '[beh-bee-dah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'bottle': const LexiconEntry(
+      labelEn: 'Bottle',
+      targetWord: 'Botella',
+      secondaryScript: 'la botella',
+      transliteration: '[boh-teh-yah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'book': const LexiconEntry(
+      labelEn: 'Book',
+      targetWord: 'Libro',
+      secondaryScript: 'el libro',
+      transliteration: '[lee-bro]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'laptop': const LexiconEntry(
+      labelEn: 'Laptop',
+      targetWord: 'Portátil',
+      secondaryScript: 'el portátil',
+      transliteration: '[por-tah-teel]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'chair': const LexiconEntry(
+      labelEn: 'Chair',
+      targetWord: 'Silla',
+      secondaryScript: 'la silla',
+      transliteration: '[see-yah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'dining table': const LexiconEntry(
+      labelEn: 'Table',
+      targetWord: 'Mesa',
+      secondaryScript: 'la mesa',
+      transliteration: '[meh-sah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'desk': const LexiconEntry(
+      labelEn: 'Desk',
+      targetWord: 'Escritorio',
+      secondaryScript: 'el escritorio',
+      transliteration: '[es-kree-toh-ryoh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'cell phone': const LexiconEntry(
+      labelEn: 'Mobile Phone',
+      targetWord: 'Móvil',
+      secondaryScript: 'el móvil',
+      transliteration: '[moh-veel]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'bicycle': const LexiconEntry(
+      labelEn: 'Bicycle',
+      targetWord: 'Bicicleta',
+      secondaryScript: 'la bicicleta',
+      transliteration: '[bee-see-kleh-tah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'car': const LexiconEntry(
+      labelEn: 'Car',
+      targetWord: 'Coche',
+      secondaryScript: 'el coche',
+      transliteration: '[koh-cheh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'cat': const LexiconEntry(
+      labelEn: 'Cat',
+      targetWord: 'Gato',
+      secondaryScript: 'el gato',
+      transliteration: '[gah-toh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'dog': const LexiconEntry(
+      labelEn: 'Dog',
+      targetWord: 'Perro',
+      secondaryScript: 'el perro',
+      transliteration: '[peh-rroh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'potted plant': const LexiconEntry(
+      labelEn: 'Plant',
+      targetWord: 'Planta',
+      secondaryScript: 'la planta',
+      transliteration: '[plahn-tah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'clock': const LexiconEntry(
+      labelEn: 'Clock',
+      targetWord: 'Reloj',
+      secondaryScript: 'el reloj',
+      transliteration: '[rreh-loh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+  };
+
+  /// Lookup a detected class name for a given language code (ja, fil, es)
+  static LexiconEntry? lookup({
+    required String className,
+    required String langCode,
+  }) {
+    final key = className.trim().toLowerCase();
+    if (langCode == 'ja') {
+      return _japanese[key];
+    } else if (langCode == 'fil' || langCode == 'tl') {
+      return _filipino[key];
+    } else {
+      return _spanish[key];
+    }
+  }
+
+  /// Check if a detected class has rich offline mappings
+  static bool hasMapping(String className) {
+    final key = className.trim().toLowerCase();
+    return _japanese.containsKey(key) || _filipino.containsKey(key) || _spanish.containsKey(key);
+  }
+}

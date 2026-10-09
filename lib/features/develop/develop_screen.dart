@@ -90,10 +90,17 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen> {
         language: language,
       );
 
+      // Augment result with RAG (Lexicon Ground Truth + Spaced Memory Recall)
+      final ragService = ref.read(ragServiceProvider);
+      final augmentedResult = await ragService.augment(
+        rawResult: result,
+        languageCode: language.code,
+      );
+
       if (mounted) {
         setState(() {
           _isAiDone = true;
-          _aiResult = result;
+          _aiResult = augmentedResult;
         });
         _checkAndProceed();
       }

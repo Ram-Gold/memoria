@@ -141,12 +141,32 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
         title: const Text('Memoria Camera'),
         actions: [
           IconButton(
-            icon: Icon(_flashMode == FlashMode.auto ? Icons.flash_auto : Icons.flash_on),
-            onPressed: () {
+            tooltip: 'Flash: ${_flashMode.name.toUpperCase()}',
+            icon: Icon(
+              _flashMode == FlashMode.always
+                  ? Icons.flash_on
+                  : (_flashMode == FlashMode.auto ? Icons.flash_auto : Icons.flash_off),
+              color: _flashMode != FlashMode.off ? Colors.amber : Colors.grey,
+            ),
+            onPressed: () async {
+              FlashMode nextMode;
+              if (_flashMode == FlashMode.auto) {
+                nextMode = FlashMode.always;
+              } else if (_flashMode == FlashMode.always) {
+                nextMode = FlashMode.off;
+              } else {
+                nextMode = FlashMode.auto;
+              }
+
               setState(() {
-                _flashMode = _flashMode == FlashMode.auto ? FlashMode.off : FlashMode.auto;
-                _cameraController?.setFlashMode(_flashMode);
+                _flashMode = nextMode;
               });
+
+              try {
+                await _cameraController?.setFlashMode(nextMode);
+              } catch (e) {
+                debugPrint('Flash mode error: $e');
+              }
             },
           ),
           TextButton(
@@ -164,29 +184,29 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
             child: Text(_aspectRatio),
           ),
           IconButton(
-            tooltip: ref.watch(aiVisionModeProvider) == AiVisionMode.localGemma
-                ? 'AI Mode: Local Gemma (Tap for Cloud)'
-                : 'AI Mode: Mistral Cloud (Tap for Local)',
+            tooltip: ref.watch(aiVisionModeProvider) == AiVisionMode.localOnDevice
+                ? 'AI Mode: Local On-Device AI (YOLO / Gemma)'
+                : 'AI Mode: Mistral Cloud HD (Tap for Local)',
             icon: Icon(
-              ref.watch(aiVisionModeProvider) == AiVisionMode.localGemma
+              ref.watch(aiVisionModeProvider) == AiVisionMode.localOnDevice
                   ? Icons.memory
                   : Icons.cloud_done,
-              color: ref.watch(aiVisionModeProvider) == AiVisionMode.localGemma
+              color: ref.watch(aiVisionModeProvider) == AiVisionMode.localOnDevice
                   ? Colors.tealAccent
                   : Colors.amberAccent,
             ),
             onPressed: () {
               final current = ref.read(aiVisionModeProvider);
-              final next = current == AiVisionMode.localGemma
+              final next = current == AiVisionMode.localOnDevice
                   ? AiVisionMode.cloudMistral
-                  : AiVisionMode.localGemma;
+                  : AiVisionMode.localOnDevice;
               ref.read(aiVisionModeProvider.notifier).state = next;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   duration: const Duration(seconds: 2),
                   content: Text(
-                    next == AiVisionMode.localGemma
-                        ? 'Switched to Local On-Device AI (Gemma)'
+                    next == AiVisionMode.localOnDevice
+                        ? 'Switched to Local On-Device AI (YOLO + Lexicon)'
                         : 'Switched to Mistral Cloud HD',
                   ),
                 ),
@@ -291,8 +311,15 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                           ? _cameras.last
                           : _cameras.first;
                       _cameraController?.dispose();
-                      _cameraController = CameraController(newCam, ResolutionPreset.high);
-                      _cameraController!.initialize().then((_) {
+                      _cameraController = CameraController(
+                        newCam,
+                        ResolutionPreset.high,
+                        enableAudio: false,
+                      );
+                      _cameraController!.initialize().then((_) async {
+                        try {
+                          await _cameraController!.setFlashMode(_flashMode);
+                        } catch (_) {}
                         if (mounted) setState(() {});
                       });
                     }

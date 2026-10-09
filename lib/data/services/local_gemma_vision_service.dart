@@ -77,26 +77,54 @@ class LocalGemmaVisionService implements VisionService {
 
     try {
       // Execute local Gemma multimodal prompt
+      // Execute optimized on-device multimodal prompt with anchored framing and few-shot calibration
       final prompt = '''
-Task: Memoria Local Vision & Lexicon Agent.
-Identify the primary object in this image.
+Task: Memoria Autonomous Vision & Pedagogical Lexicon Agent.
+Role: Analyze this photograph. Identify 1 to 3 tangible physical objects in the image.
+Reject human faces or private PII.
+Focus on tangible everyday items: tools, tableware, drinks, electronics, plants, animals, vehicles, furniture.
+Select exactly ONE prominent focal object as "obj_01".
+
 Target Language: ${language.code} (${language.displayName})
-Output valid JSON only:
+Pedagogical Instructions: ${language.promptInstructions}
+
+FEW-SHOT EXAMPLES:
+Example 1 (Ceramic coffee mug):
+{
+  "label_en": "Coffee Mug",
+  "target_word": "珈琲碗",
+  "secondary_script": "コーヒーカップ",
+  "transliteration": "koohii kappu",
+  "part_of_speech": "Noun",
+  "difficulty_level": "N5"
+}
+
+Example 2 (Study book):
+{
+  "label_en": "Book",
+  "target_word": "本",
+  "secondary_script": "ほん",
+  "transliteration": "hon",
+  "part_of_speech": "Noun",
+  "difficulty_level": "N5"
+}
+
+STRICT JSON OUTPUT REQUIRED:
 {
   "session_id": "mem_local_${DateTime.now().millisecondsSinceEpoch}",
   "language_code": "${language.code}",
   "primary_object_id": "obj_01",
-  "scene_description": "detected local scene",
+  "scene_description": "concise scene context (max 60 chars)",
   "detected_objects": [
     {
       "id": "obj_01",
-      "label_en": "object label",
-      "target_word": "target word",
-      "secondary_script": "secondary script",
-      "transliteration": "pronunciation",
+      "label_en": "concise english noun",
+      "target_word": "authentic native script word",
+      "secondary_script": "phonetic reading or secondary script",
+      "transliteration": "pronunciation / romaji",
       "part_of_speech": "Noun",
-      "difficulty_level": "A1",
-      "box_2d": [200, 200, 800, 800]
+      "difficulty_level": "A1 or N5",
+      "box_2d": [150, 150, 850, 850]
     }
   ]
 }

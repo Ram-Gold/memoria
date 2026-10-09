@@ -91,4 +91,91 @@ class PolaroidRepository {
       whereArgs: [id],
     );
   }
+
+  /// Searches polaroids matching query across word, transliteration, secondary script, or detected objects
+  Future<List<Polaroid>> searchPolaroids(String query, {String? languageCode}) async {
+    final db = await _dbHelper.database;
+    final cleanQuery = query.trim().toLowerCase();
+    if (cleanQuery.isEmpty) {
+      return getAllPolaroids();
+    }
+
+    final pattern = '%$cleanQuery%';
+
+    String sql = '''
+      SELECT DISTINCT p.* FROM memoria_polaroids p
+      LEFT JOIN memoria_detected_objects o ON p.id = o.polaroid_id
+      WHERE (
+        LOWER(p.selected_word) LIKE ? OR
+        LOWER(COALESCE(p.secondary_script, '')) LIKE ? OR
+        LOWER(COALESCE(p.transliteration, '')) LIKE ? OR
+        LOWER(o.label_en) LIKE ? OR
+        LOWER(o.target_word) LIKE ?
+      )
+    ''';
+    final args = <dynamic>[pattern, pattern, pattern, pattern, pattern];
+
+    if (languageCode != null && languageCode.isNotEmpty) {
+      sql += ' AND p.language_code = ?';
+      args.add(languageCode);
+    }
+
+    sql += ' ORDER BY p.created_at DESC';
+
+    final results = await db.rawQuery(sql, args);
+
+    final polaroids = <Polaroid>[];
+    for (final row in results) {
+      final polId = row['id']?.toString() ?? '';
+      final objectRows = await db.query(
+        'memoria_detected_objects',
+        where: 'polaroid_id = ?',
+        whereArgs: [polId],
+      );
+
+      final objects = objectRows.map((o) => DetectedObject.fromDbMap(o)).toList();
+      polaroids.add(Polaroid.fromDbMap(row, objects: objects));
+    }
+
+    return polaroids;
+  }
+
+  /// Finds historical polaroids where a specific object label was detected (powers RAG memory retrieval)
+  Future<List<Polaroid>> findPolaroidsByObjectLabel(String labelEn, {String? languageCode}) async {
+    final db = await _dbHelper.database;
+    final cleanLabel = labelEn.trim().toLowerCase();
+    final pattern = '%$cleanLabel%';
+
+    String sql = '''
+      SELECT DISTINCT p.* FROM memoria_polaroids p
+      JOIN memoria_detected_objects o ON p.id = o.polaroid_id
+      WHERE LOWER(o.label_en) LIKE ?
+    ''';
+    final args = <dynamic>[pattern];
+
+    if (languageCode != null && languageCode.isNotEmpty) {
+      sql += ' AND p.language_code = ?';
+      args.add(languageCode);
+    }
+
+    sql += ' ORDER BY p.created_at ASC';
+
+    final results = await db.rawQuery(sql, args);
+
+    final polaroids = <Polaroid>[];
+    for (final row in results) {
+      final polId = row['id']?.toString() ?? '';
+      final objectRows = await db.query(
+        'memoria_detected_objects',
+        where: 'polaroid_id = ?',
+        whereArgs: [polId],
+      );
+
+      final objects = objectRows.map((o) => DetectedObject.fromDbMap(o)).toList();
+      polaroids.add(Polaroid.fromDbMap(row, objects: objects));
+    }
+
+    return polaroids;
+  }
 }
+

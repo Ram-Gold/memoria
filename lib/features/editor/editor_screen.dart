@@ -159,7 +159,89 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 style: const TextStyle(fontStyle: FontStyle.italic),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            // RAG Spaced Memory Recall Card
+            if (widget.analysisResult.ragContext?.hasHistory == true) ...[
+              Card(
+                color: Colors.amber[50],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.amber.shade300),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.history_edu, color: Colors.amber),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.analysisResult.ragContext!.recallHeadline ?? 'Spaced Memory Recall',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'First captured: ${widget.analysisResult.ragContext!.history!.firstCapturedAt.toLocal().toString().split(" ").first} · Reinforces spaced learning retention!',
+                              style: const TextStyle(fontSize: 12, color: Colors.black87),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // RAG Pedagogical Collocation Card
+            if (widget.analysisResult.ragContext?.recommendedCollocation != null) ...[
+              Card(
+                color: Colors.blueGrey[50],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.blueGrey.shade200),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.menu_book, color: Colors.blueGrey),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Collocation Ground Truth (Dictionary RAG):',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black54),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.analysisResult.ragContext!.recommendedCollocation!,
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            ),
+                            if (widget.analysisResult.ragContext!.phraseTranslation != null)
+                              Text(
+                                widget.analysisResult.ragContext!.phraseTranslation!,
+                                style: const TextStyle(fontSize: 12, color: Colors.black87, fontStyle: FontStyle.italic),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
 
             // Polaroid Card Frame
             Container(

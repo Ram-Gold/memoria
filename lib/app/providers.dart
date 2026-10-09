@@ -1,15 +1,17 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/languages/language_profile.dart';
+import '../core/rag/rag_service.dart';
 import '../data/repositories/polaroid_repository.dart';
 import '../data/services/local_gemma_vision_service.dart';
+import '../data/services/local_mlkit_vision_service.dart';
 import '../data/services/mistral_vision_service.dart';
 import '../domain/models/polaroid.dart';
 import '../domain/services/vision_service.dart';
 
 enum AiVisionMode {
   cloudMistral,
-  localGemma,
+  localOnDevice,
 }
 
 String _getMistralApiKey() {
@@ -22,22 +24,31 @@ String _getMistralApiKey() {
 }
 
 final aiVisionModeProvider = StateProvider<AiVisionMode>((ref) {
-  // Default to cloudMistral if key is available, else localGemma
+  // Default to cloudMistral if key is available, else localOnDevice
   final apiKey = _getMistralApiKey();
-  return apiKey.trim().isNotEmpty ? AiVisionMode.cloudMistral : AiVisionMode.localGemma;
+  return apiKey.trim().isNotEmpty ? AiVisionMode.cloudMistral : AiVisionMode.localOnDevice;
+});
+
+final localMlKitVisionServiceProvider = Provider<LocalMlKitVisionService>((ref) {
+  return LocalMlKitVisionService();
+});
+
+final localGemmaVisionServiceProvider = Provider<LocalGemmaVisionService>((ref) {
+  return LocalGemmaVisionService();
 });
 
 final visionServiceProvider = Provider<VisionService>((ref) {
   final mode = ref.watch(aiVisionModeProvider);
-  if (mode == AiVisionMode.localGemma) {
-    return LocalGemmaVisionService();
+  if (mode == AiVisionMode.localOnDevice) {
+    // Highly accurate real-pixel on-device computer vision (<50ms, zero model downloads)
+    return LocalMlKitVisionService();
   }
 
   final apiKey = _getMistralApiKey();
   if (apiKey.trim().isNotEmpty) {
     return MistralVisionService(apiKey: apiKey);
   }
-  return LocalGemmaVisionService();
+  return LocalMlKitVisionService();
 });
 
 final polaroidRepositoryProvider = Provider<PolaroidRepository>((ref) {
@@ -86,3 +97,22 @@ final polaroidsProvider = StateNotifierProvider<PolaroidsNotifier, AsyncValue<Li
   final repo = ref.watch(polaroidRepositoryProvider);
   return PolaroidsNotifier(repo);
 });
+
+final ragServiceProvider = Provider<RagService>((ref) {
+  final repo = ref.watch(polaroidRepositoryProvider);
+  return RagService(repository: repo);
+});
+
+final scrapbookSearchQueryProvider = StateProvider<String>((ref) => '');
+
+final scrapbookFilteredPolaroidsProvider = FutureProvider.autoDispose<List<Polaroid>>((ref) async {
+  // Listen to polaroidsProvider to invalidate when items are added or deleted
+  ref.watch(polaroidsProvider);
+  final query = ref.watch(scrapbookSearchQueryProvider).trim();
+  final repo = ref.watch(polaroidRepositoryProvider);
+  if (query.isEmpty) {
+    return repo.getAllPolaroids();
+  }
+  return repo.searchPolaroids(query);
+});
+

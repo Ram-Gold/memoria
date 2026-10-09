@@ -1,3 +1,4 @@
+import '../../core/rag/models/rag_context.dart';
 import 'detected_object.dart';
 
 class AnalysisResult {
@@ -6,6 +7,7 @@ class AnalysisResult {
   final String primaryObjectId;
   final String sceneDescription;
   final List<DetectedObject> detectedObjects;
+  final RagContext? ragContext;
 
   const AnalysisResult({
     required this.sessionId,
@@ -13,6 +15,7 @@ class AnalysisResult {
     required this.primaryObjectId,
     required this.sceneDescription,
     required this.detectedObjects,
+    this.ragContext,
   });
 
   DetectedObject? get primaryObject {
@@ -24,7 +27,25 @@ class AnalysisResult {
     return detectedObjects.isNotEmpty ? detectedObjects.first : null;
   }
 
-  factory AnalysisResult.fromJson(Map<String, dynamic> json) {
+  AnalysisResult copyWith({
+    String? sessionId,
+    String? languageCode,
+    String? primaryObjectId,
+    String? sceneDescription,
+    List<DetectedObject>? detectedObjects,
+    RagContext? ragContext,
+  }) {
+    return AnalysisResult(
+      sessionId: sessionId ?? this.sessionId,
+      languageCode: languageCode ?? this.languageCode,
+      primaryObjectId: primaryObjectId ?? this.primaryObjectId,
+      sceneDescription: sceneDescription ?? this.sceneDescription,
+      detectedObjects: detectedObjects ?? this.detectedObjects,
+      ragContext: ragContext ?? this.ragContext,
+    );
+  }
+
+  factory AnalysisResult.fromJson(Map<String, dynamic> json, {RagContext? ragContext}) {
     final list = (json['detected_objects'] as List? ?? [])
         .map((e) => DetectedObject.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -35,6 +56,7 @@ class AnalysisResult {
       primaryObjectId: json['primary_object_id']?.toString() ?? (list.isNotEmpty ? list.first.id : ''),
       sceneDescription: json['scene_description']?.toString() ?? '',
       detectedObjects: list,
+      ragContext: ragContext,
     );
   }
 
