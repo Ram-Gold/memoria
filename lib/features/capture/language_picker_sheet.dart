@@ -11,7 +11,7 @@ class LanguagePickerSheet extends ConsumerWidget {
     final activeLanguage = ref.watch(activeLanguageProvider);
 
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,

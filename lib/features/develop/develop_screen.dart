@@ -145,6 +145,9 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final format = ref.watch(selectedPolaroidFormatProvider);
+    final aiMode = ref.watch(aiVisionModeProvider);
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -154,68 +157,136 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
+        title: Text(
+          '${format.filmType} • ${format.dimensions}',
+          style: const TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.8),
+        ),
+        centerTitle: true,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Undeveloped black Polaroid frame
-              Container(
-                width: 260,
-                height: 320,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.white24, blurRadius: 12),
-                  ],
-                ),
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 48),
-                child: Container(
-                  color: Color.lerp(Colors.black, Colors.grey[800], _agitationLevel),
-                  child: Center(
-                    child: Text(
-                      _isShaken ? 'Developing...' : 'Shake Gently...',
-                      style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
-                    ),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Undeveloped black Polaroid frame with authentic format styling
+                Container(
+                  width: 260,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.white24, blurRadius: 16),
+                    ],
+                  ),
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+                  child: Column(
+                    children: [
+                      AspectRatio(
+                        aspectRatio: format.ratio,
+                        child: Container(
+                          color: Color.lerp(Colors.black, Colors.grey[850], _agitationLevel),
+                          child: Center(
+                            child: Text(
+                              _isShaken ? 'Developing...' : 'Shake Gently...',
+                              style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'MEMORIA • ${format.filmType.toUpperCase()} • ${format.dimensions}',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                          color: Colors.black.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
-              // Status indicators
-              Text(
-                'Agitation Level: ${(_agitationLevel * 100).toInt()}%',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _isAiDone ? 'AI analysis completed ✓' : 'AI analyzing photo...',
-                style: TextStyle(
-                  color: _isAiDone ? Colors.greenAccent : Colors.orangeAccent,
+                // AI Engine Mode & Status Pill
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: aiMode == AiVisionMode.cloudMistral
+                        ? const Color(0x28E36528)
+                        : const Color(0x282E7D32),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: aiMode == AiVisionMode.cloudMistral
+                          ? const Color(0xFFE36528)
+                          : const Color(0xFF4CAF50),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(aiMode == AiVisionMode.cloudMistral ? '☁️' : '⚡', style: const TextStyle(fontSize: 14)),
+                      const SizedBox(width: 6),
+                      Text(
+                        aiMode == AiVisionMode.cloudMistral
+                            ? 'Cloud AI (Mistral VLM)'
+                            : 'Local AI (On-Device ML Kit)',
+                        style: TextStyle(
+                          color: aiMode == AiVisionMode.cloudMistral
+                              ? const Color(0xFFFF8A65)
+                              : const Color(0xFF81C784),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
+
+                // Status indicators
                 Text(
-                  'Error: $_errorMessage',
-                  style: const TextStyle(color: Colors.redAccent),
+                  'Agitation Level: ${(_agitationLevel * 100).toInt()}%',
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _isAiDone
+                      ? 'AI vocabulary recognition complete ✓'
+                      : (aiMode == AiVisionMode.cloudMistral
+                          ? 'Mistral VLM parsing scene...'
+                          : 'Local ML Kit analyzing image...'),
+                  style: TextStyle(
+                    color: _isAiDone ? Colors.greenAccent : Colors.orangeAccent,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Error: $_errorMessage',
+                    style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+
+                const SizedBox(height: 20),
+
+                // Button to simulate shake for simulator / testing
+                OutlinedButton.icon(
+                  onPressed: _simulateShake,
+                  icon: const Icon(Icons.vibration, color: Colors.white, size: 18),
+                  label: const Text('Simulate Shake (Tester Shortcut)', style: TextStyle(color: Colors.white, fontSize: 13)),
                 ),
               ],
-
-              const SizedBox(height: 24),
-
-              // Button to simulate shake for simulator / testing
-              OutlinedButton.icon(
-                onPressed: _simulateShake,
-                icon: const Icon(Icons.vibration, color: Colors.white),
-                label: const Text('Simulate Shake (Tester Shortcut)', style: TextStyle(color: Colors.white)),
-              ),
-            ],
+            ),
           ),
         ),
       ),

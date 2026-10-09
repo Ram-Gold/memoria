@@ -267,17 +267,68 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                   BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
                 ],
               ),
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 28),
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
               child: Column(
                 children: [
-                  // Photo
+                  // Polaroid Format and AI Engine Header Bar
+                  Builder(
+                    builder: (context) {
+                      final format = ref.watch(selectedPolaroidFormatProvider);
+                      final aiMode = ref.watch(aiVisionModeProvider);
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${format.filmType.toUpperCase()} • ${format.dimensions}',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.8,
+                                color: Colors.black.withValues(alpha: 0.45),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: aiMode == AiVisionMode.cloudMistral
+                                    ? const Color(0x1FE36528)
+                                    : const Color(0x1F2E7D32),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                aiMode == AiVisionMode.cloudMistral ? '☁️ Mistral VLM' : '⚡ Local ML Kit',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: aiMode == AiVisionMode.cloudMistral
+                                      ? const Color(0xFFD44B0F)
+                                      : const Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  // Photo fitted to selected Polaroid format
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: Image.file(
-                      File(widget.imagePath),
-                      height: 280,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                    child: Builder(
+                      builder: (context) {
+                        final format = ref.watch(selectedPolaroidFormatProvider);
+                        return AspectRatio(
+                          aspectRatio: format.ratio,
+                          child: Image.file(
+                            File(widget.imagePath),
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 16),
