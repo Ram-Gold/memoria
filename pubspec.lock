@@ -214,6 +214,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.2.1"
+  flutter_grab:
+    dependency: "direct main"
+    description:
+      name: flutter_grab
+      sha256: edb59a11582a2b4fb790ce061de6d02f72d53f992086ca87b7d2fc706b06dba9
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -512,6 +520,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  pasteboard:
+    dependency: transitive
+    description:
+      name: pasteboard
+      sha256: fedbe8da188d2f713aa8b01260737342e6e1087534a3ab26e1a719f8d3e8f32f
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.0"
   path:
     dependency: "direct main"
     description:

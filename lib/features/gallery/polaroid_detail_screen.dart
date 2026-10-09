@@ -198,85 +198,14 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
                                 ),
                               ),
                               clipBehavior: Clip.antiAlias,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  File(p.imagePath).existsSync()
-                                      ? Image.file(File(p.imagePath), fit: BoxFit.cover)
-                                      : Container(
-                                          color: MemoriaTokens.surfaceContainerHigh,
-                                          child: const Center(
-                                            child: Icon(Icons.broken_image, size: 48, color: MemoriaTokens.outline),
-                                          ),
-                                        ),
-
-                                  // Subtle film grain gradient scrim
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.bottomCenter,
-                                        end: Alignment.topCenter,
-                                        colors: [
-                                          Colors.black.withValues(alpha: 0.35),
-                                          Colors.transparent,
-                                        ],
+                              child: File(p.imagePath).existsSync()
+                                  ? Image.file(File(p.imagePath), fit: BoxFit.cover)
+                                  : Container(
+                                      color: MemoriaTokens.surfaceContainerHigh,
+                                      child: const Center(
+                                        child: Icon(Icons.broken_image, size: 48, color: MemoriaTokens.outline),
                                       ),
                                     ),
-                                  ),
-
-                                  // Optical Focus Reticle Over Selected Object
-                                  Center(
-                                    child: Container(
-                                      width: 90,
-                                      height: 90,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white.withValues(alpha: 0.65),
-                                          width: 1.8,
-                                        ),
-                                        color: Colors.white.withValues(alpha: 0.12),
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(Icons.center_focus_strong, color: Colors.white, size: 20),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            activeWord,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 1.2,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-
-                                  // Film Roll Stamp in bottom corner
-                                  Positioned(
-                                    bottom: 6,
-                                    right: 6,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.6),
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                      child: Text(
-                                        'MEM-200 · ISO 400',
-                                        style: MemoriaTokens.telemetryMono(
-                                          fontSize: 8,
-                                          color: Colors.white70,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
                             ),
                           ),
 

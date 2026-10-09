@@ -190,6 +190,36 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
     HapticFeedback.selectionClick();
   }
 
+  Widget _buildUnstretchedCameraPreview(BuildContext context) {
+    final controller = _cameraController!;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final previewSize = controller.value.previewSize;
+    final double previewWidth;
+    final double previewHeight;
+
+    if (previewSize != null) {
+      previewWidth = isLandscape ? previewSize.width : previewSize.height;
+      previewHeight = isLandscape ? previewSize.height : previewSize.width;
+    } else {
+      final ratio = controller.value.aspectRatio;
+      previewWidth = 1000.0;
+      previewHeight = isLandscape ? (1000.0 / ratio) : (1000.0 * ratio);
+    }
+
+    return SizedBox.expand(
+      child: FittedBox(
+        fit: BoxFit.cover,
+        clipBehavior: Clip.hardEdge,
+        child: SizedBox(
+          width: previewWidth,
+          height: previewHeight,
+          child: CameraPreview(controller),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeLanguage = ref.watch(activeLanguageProvider);
@@ -397,8 +427,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                                     child: Stack(
                                       fit: StackFit.expand,
                                       children: [
-                                        if (_isCameraInitialized && _cameraController != null)
-                                          CameraPreview(_cameraController!)
+                                        if (_isCameraInitialized &&
+                                            _cameraController != null &&
+                                            _cameraController!.value.isInitialized)
+                                          _buildUnstretchedCameraPreview(context)
                                         else
                                           Container(
                                             color: const Color(0xFF181A1D),
@@ -406,28 +438,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                                               child: Icon(Icons.camera_alt_outlined, color: Colors.white24, size: 40),
                                             ),
                                           ),
-
-                                        // Subtle Optical Focus Reticle
-                                        Center(
-                                          child: Container(
-                                            width: 48,
-                                            height: 48,
-                                            decoration: BoxDecoration(
-                                              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1),
-                                              borderRadius: BorderRadius.circular(24),
-                                            ),
-                                            child: Center(
-                                              child: Container(
-                                                width: 4,
-                                                height: 4,
-                                                decoration: const BoxDecoration(
-                                                  color: MemoriaTokens.primary,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
 
                                         // Film Emulsion Grain Scrim
                                         IgnorePointer(
@@ -449,36 +459,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                                     ),
                                   ),
 
-                                  // Authentic Polaroid Chin Margin
-                                  Container(
-                                    height: 44,
-                                    alignment: Alignment.center,
-                                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            'MEMORIA • ${format.filmType.toUpperCase()}',
-                                            overflow: TextOverflow.ellipsis,
-                                            style: MemoriaTokens.telemetryMono(
-                                              fontSize: 8.5,
-                                              color: Colors.black.withValues(alpha: 0.45),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          format.dimensions,
-                                          style: MemoriaTokens.telemetryMono(
-                                            fontSize: 8.5,
-                                            color: Colors.black.withValues(alpha: 0.35),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                  // Clean Authentic Polaroid Chin Margin
+                                  const SizedBox(height: 44),
                                 ],
                               ),
                             ),
@@ -617,7 +599,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.transparent,
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 3.5),
+                            border: Border.all(color: Colors.white, width: 3.5),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x66000000),
@@ -629,18 +611,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                           child: Container(
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  Color(0xFFFF7A45),
-                                  MemoriaTokens.primary,
-                                  MemoriaTokens.primaryDark,
-                                ],
-                              ),
+                              color: Colors.white,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color(0x59E36528),
-                                  blurRadius: 10,
-                                  spreadRadius: 1,
+                                  color: Color(0x26000000),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 1),
                                 ),
                               ],
                             ),
@@ -650,18 +626,11 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                                       width: 26,
                                       height: 26,
                                       child: CircularProgressIndicator(
-                                        color: Colors.white,
+                                        color: Colors.black87,
                                         strokeWidth: 2.5,
                                       ),
                                     )
-                                  : Container(
-                                      width: 14,
-                                      height: 14,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
-                                      ),
-                                    ),
+                                  : null,
                             ),
                           ),
                         ),
@@ -716,7 +685,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> with WidgetsBinding
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 84),
               ],
             ),
           ),

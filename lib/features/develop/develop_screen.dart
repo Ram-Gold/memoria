@@ -268,35 +268,13 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen> {
                                       ),
                                     ),
 
-                                    // Developing Reticle Frame
-                                    Center(
-                                      child: Container(
-                                        width: 50,
-                                        height: 50,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.white.withValues(alpha: 0.3),
-                                            width: 1,
-                                          ),
-                                          borderRadius: BorderRadius.circular(25),
-                                        ),
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
                             ),
 
-                            // Chin Margin
-                            const SizedBox(height: 10),
-                            Text(
-                              'MEMORIA • ${format.filmType.toUpperCase()} • ${format.dimensions}',
-                              style: MemoriaTokens.telemetryMono(
-                                fontSize: 9,
-                                color: Colors.black.withValues(alpha: 0.45),
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                            // Clean Authentic Polaroid Chin Margin
+                            const SizedBox(height: 36),
                           ],
                         ),
                       ),

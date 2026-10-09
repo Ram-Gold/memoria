@@ -319,26 +319,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                                           ),
                                         );
                                       }),
-
-                                      // Film Roll Tag
-                                      Positioned(
-                                        bottom: 6,
-                                        right: 6,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withValues(alpha: 0.55),
-                                            borderRadius: BorderRadius.circular(2),
-                                          ),
-                                          child: Text(
-                                            format.filmType.toUpperCase(),
-                                            style: MemoriaTokens.telemetryMono(
-                                              fontSize: 8,
-                                              color: Colors.white70,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 );
