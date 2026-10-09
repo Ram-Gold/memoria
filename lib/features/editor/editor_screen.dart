@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../app/providers.dart';
+import '../../core/services/app_tts_service.dart';
 import '../../domain/models/analysis_result.dart';
 import '../../domain/models/detected_object.dart';
 import '../../domain/models/polaroid.dart';
@@ -25,7 +25,7 @@ class EditorScreen extends ConsumerStatefulWidget {
 
 class _EditorScreenState extends ConsumerState<EditorScreen> {
   late DetectedObject _selectedObject;
-  final FlutterTts _tts = FlutterTts();
+  final AppTtsService _ttsService = AppTtsService();
   bool _isSaving = false;
   bool _invertScriptOrder = false; // For Baybayin vs Latin toggle
 
@@ -41,22 +41,31 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 targetWord: 'Word',
                 box: [0, 0, 1000, 1000],
               ));
-    _initTts();
+    _ttsService.init();
   }
 
-  Future<void> _initTts() async {
+  Future<void> _speak([DetectedObject? obj]) async {
+    final target = obj ?? _selectedObject;
     final language = ref.read(activeLanguageProvider);
-    await _tts.setLanguage(language.ttsLocale);
-    await _tts.setSpeechRate(0.45);
-  }
 
-  Future<void> _speak() async {
-    final language = ref.read(activeLanguageProvider);
-    await _tts.setLanguage(language.ttsLocale);
+    final result = await _ttsService.speak(
+      languageCode: language.code,
+      targetWord: target.targetWord,
+      secondaryScript: target.secondaryScript,
+      transliteration: target.transliteration,
+    );
 
-    // For Filipino, speak modern Tagalog (secondaryScript). For Japanese, speak secondaryScript (kana).
-    final textToSpeak = _selectedObject.secondaryScript ?? _selectedObject.targetWord;
-    await _tts.speak(textToSpeak);
+    if (!result.success && mounted && result.isMissingVoicePack) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${language.displayName} offline voice data missing. Download offline speech data in Android Settings > Google Text-to-Speech.',
+          ),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(label: 'OK', onPressed: () {}),
+        ),
+      );
+    }
   }
 
   Future<void> _savePolaroid() async {
@@ -66,6 +75,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     try {
       final polId = const Uuid().v4();
       final language = ref.read(activeLanguageProvider);
+
+      final threshold = ref.read(confidenceThresholdProvider);
+      final confidentObjects = widget.analysisResult.detectedObjects
+          .where((o) => o.isConfident(threshold))
+          .toList();
 
       final polaroid = Polaroid(
         id: polId,
@@ -79,7 +93,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         partOfSpeech: _selectedObject.partOfSpeech,
         difficultyLevel: _selectedObject.difficultyLevel,
         createdAt: DateTime.now(),
-        detectedObjects: widget.analysisResult.detectedObjects,
+        detectedObjects: confidentObjects,
       );
 
       await ref.read(polaroidsProvider.notifier).addPolaroid(polaroid);
@@ -88,7 +102,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Saved to Scrapbook!')),
         );
-        // Navigate to home (main navigation scaffold)
+        // Navigate to Scrapbook tab on main navigation scaffold
+        ref.read(navigationIndexProvider.notifier).state = 2;
         context.go('/');
       }
     } catch (e) {
@@ -106,7 +121,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   @override
   void dispose() {
-    _tts.stop();
+    _ttsService.stop();
     super.dispose();
   }
 
@@ -327,35 +342,89 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               ],
             ),
 
-            const SizedBox(height: 24),
+            // Secondary Detected Objects Switcher (Filtered by confidence threshold)
+            Builder(
+              builder: (context) {
+                final threshold = ref.watch(confidenceThresholdProvider);
+                final confidentObjects = widget.analysisResult.detectedObjects
+                    .where((obj) => obj.isConfident(threshold))
+                    .toList();
 
-            // Secondary Detected Objects Switcher
-            const Text(
-              'Switch Taught Object in Scene:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                if (confidentObjects.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Switch Taught Object in Scene:',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    ...confidentObjects.map((obj) {
+                      final isSelected = obj.id == _selectedObject.id;
+                      return Card(
+                        color: isSelected ? Colors.orange[50] : Colors.white,
+                        elevation: isSelected ? 2 : 0.5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(
+                            color: isSelected ? Colors.orange : Colors.grey.shade300,
+                            width: isSelected ? 1.5 : 0.8,
+                          ),
+                        ),
+                        child: ListTile(
+                          leading: IconButton(
+                            icon: const Icon(Icons.volume_up),
+                            color: isSelected ? Colors.orange[800] : Colors.black54,
+                            tooltip: 'Hear pronunciation',
+                            onPressed: () => _speak(obj),
+                          ),
+                          title: Text(
+                            '${obj.targetWord} (${obj.labelEn})',
+                            style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            ),
+                          ),
+                          subtitle: Text('${obj.secondaryScript ?? ""} · ${obj.transliteration ?? ""}'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '${obj.confidencePercentage}% confident',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              isSelected
+                                  ? const Icon(Icons.check_circle, color: Colors.orange)
+                                  : const Icon(Icons.circle_outlined),
+                            ],
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _selectedObject = obj;
+                            });
+                          },
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 24),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 8),
-
-            ...widget.analysisResult.detectedObjects.map((obj) {
-              final isSelected = obj.id == _selectedObject.id;
-              return Card(
-                color: isSelected ? Colors.orange[50] : null,
-                child: ListTile(
-                  title: Text('${obj.targetWord} (${obj.labelEn})'),
-                  subtitle: Text('${obj.secondaryScript ?? ""} · ${obj.transliteration ?? ""}'),
-                  trailing: isSelected
-                      ? const Icon(Icons.check_circle, color: Colors.orange)
-                      : const Icon(Icons.circle_outlined),
-                  onTap: () {
-                    setState(() {
-                      _selectedObject = obj;
-                    });
-                  },
-                ),
-              );
-            }),
-
-            const SizedBox(height: 24),
 
             // Save button
             ElevatedButton(

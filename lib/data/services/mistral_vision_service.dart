@@ -37,11 +37,12 @@ Analyze the photograph and generate structured vocabulary for an analog Polaroid
 CRITICAL INVARIANTS:
 1. Identify 1 to 5 prominent tangible physical objects in the image. Reject human identity / faces (no PII).
 2. Select exactly ONE primary focal object ('primary_object_id').
-3. Keep labels concise (1-2 words).
-4. Always choose the most common beginner-friendly everyday word (e.g. A1 / N5 level).
-5. ${language.promptInstructions}
-6. Provide a concise scene_description (max 80 chars).
-7. Normalized bounding box coordinates must follow [ymin, xmin, ymax, xmax] on a scale of 0 to 1000.
+3. For each object, assign a confidence score between 0.0 and 1.0 (e.g. 0.95 for clearly recognized objects, lower if ambiguous or occluded).
+4. Keep labels concise (1-2 words).
+5. Always choose the most common beginner-friendly everyday word (e.g. A1 / N5 level).
+6. ${language.promptInstructions}
+7. Provide a concise scene_description (max 80 chars).
+8. Normalized bounding box coordinates must follow [ymin, xmin, ymax, xmax] on a scale of 0 to 1000.
 
 OUTPUT FORMAT:
 Return pure valid JSON conforming strictly to this format:
@@ -59,6 +60,7 @@ Return pure valid JSON conforming strictly to this format:
       "transliteration": "pronunciation or romaji",
       "part_of_speech": "Noun",
       "difficulty_level": "A1 or N5",
+      "confidence": 0.95,
       "box_2d": [100, 100, 800, 800]
     }
   ]

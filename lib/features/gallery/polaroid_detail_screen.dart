@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/providers.dart';
 import '../../core/languages/language_profile.dart';
+import '../../core/services/app_tts_service.dart';
+import '../../domain/models/detected_object.dart';
 import '../../domain/models/polaroid.dart';
 
 class PolaroidDetailScreen extends ConsumerStatefulWidget {
@@ -17,13 +18,37 @@ class PolaroidDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
-  final FlutterTts _tts = FlutterTts();
+  final AppTtsService _ttsService = AppTtsService();
 
-  Future<void> _speak() async {
-    final lang = LanguageRegistry.findByCode(widget.polaroid.languageCode);
-    await _tts.setLanguage(lang.ttsLocale);
-    final text = widget.polaroid.secondaryScript ?? widget.polaroid.selectedWord;
-    await _tts.speak(text);
+  @override
+  void initState() {
+    super.initState();
+    _ttsService.init();
+  }
+
+  Future<void> _speak([DetectedObject? obj]) async {
+    final word = obj?.targetWord ?? widget.polaroid.selectedWord;
+    final secondary = obj?.secondaryScript ?? widget.polaroid.secondaryScript;
+    final translit = obj?.transliteration ?? widget.polaroid.transliteration;
+
+    final result = await _ttsService.speak(
+      languageCode: widget.polaroid.languageCode,
+      targetWord: word,
+      secondaryScript: secondary,
+      transliteration: translit,
+    );
+
+    if (!result.success && mounted && result.isMissingVoicePack) {
+      final lang = LanguageRegistry.findByCode(widget.polaroid.languageCode);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${lang.displayName} offline voice data missing. Download offline speech data in Android Settings > Google Text-to-Speech.',
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   Future<void> _delete() async {
@@ -50,7 +75,7 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
 
   @override
   void dispose() {
-    _tts.stop();
+    _ttsService.stop();
     super.dispose();
   }
 
@@ -129,15 +154,52 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
             const SizedBox(height: 12),
             Text('Saved on: ${p.createdAt.toLocal().toString().split(".")[0]}'),
             Text('Language: ${p.languageCode.toUpperCase()}'),
-            if (p.detectedObjects.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              const Text('All Objects in this Memory:', style: TextStyle(fontWeight: FontWeight.bold)),
-              ...p.detectedObjects.map((o) => ListTile(
-                    dense: true,
-                    title: Text('${o.targetWord} (${o.labelEn})'),
-                    subtitle: Text('${o.secondaryScript ?? ""} · ${o.transliteration ?? ""}'),
-                  )),
-            ],
+            Builder(
+              builder: (context) {
+                final threshold = ref.watch(confidenceThresholdProvider);
+                final confidentObjects = p.detectedObjects
+                    .where((o) => o.isConfident(threshold))
+                    .toList();
+
+                if (confidentObjects.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text('All Objects in this Memory:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ...confidentObjects.map((o) => ListTile(
+                          dense: true,
+                          leading: IconButton(
+                            icon: const Icon(Icons.volume_up, size: 20),
+                            tooltip: 'Hear pronunciation',
+                            onPressed: () => _speak(o),
+                          ),
+                          title: Text('${o.targetWord} (${o.labelEn})'),
+                          subtitle: Text('${o.secondaryScript ?? ""} · ${o.transliteration ?? ""}'),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${o.confidencePercentage}% match',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ),
+                          onTap: () => _speak(o),
+                        )),
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),

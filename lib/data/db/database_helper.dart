@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -56,6 +56,7 @@ class DatabaseHelper {
         transliteration TEXT,
         part_of_speech TEXT,
         difficulty_level TEXT,
+        confidence REAL DEFAULT 1.0,
         box_ymin INTEGER NOT NULL,
         box_xmin INTEGER NOT NULL,
         box_ymax INTEGER NOT NULL,
@@ -70,6 +71,11 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createIndexes(db);
+    }
+    if (oldVersion < 3) {
+      try {
+        await db.execute('ALTER TABLE memoria_detected_objects ADD COLUMN confidence REAL DEFAULT 1.0');
+      } catch (_) {}
     }
   }
 

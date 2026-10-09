@@ -71,8 +71,12 @@ class LocalYoloVisionService implements VisionService {
             .where((r) => r.confidence >= 0.35)
             .toList();
 
-        // Sort by confidence (highest confidence primary)
-        yoloResults.sort((a, b) => b.confidence.compareTo(a.confidence));
+        // Rank detections by perceptual saliency * confidence
+        yoloResults.sort((a, b) {
+          final scoreA = a.confidence * LocalObjectLexicon.getSaliencyWeight(a.className);
+          final scoreB = b.confidence * LocalObjectLexicon.getSaliencyWeight(b.className);
+          return scoreB.compareTo(scoreA);
+        });
 
         if (yoloResults.isNotEmpty) {
           final detectedObjects = <DetectedObject>[];
@@ -88,28 +92,16 @@ class LocalYoloVisionService implements VisionService {
             ];
 
             final id = 'obj_0${i + 1}';
-            final lexicon = LocalObjectLexicon.lookup(
-              className: res.className,
+            final lexicon = LocalObjectLexicon.synthesizeEntry(
+              label: res.className,
               langCode: language.code,
             );
 
-            if (lexicon != null) {
-              detectedObjects.add(lexicon.toDetectedObject(id: id, box: boxCoords));
-            } else {
-              // Generic entry if class not yet in lexicon
-              detectedObjects.add(
-                DetectedObject(
-                  id: id,
-                  labelEn: res.className.capitalize(),
-                  targetWord: res.className.capitalize(),
-                  secondaryScript: res.className.toLowerCase(),
-                  transliteration: res.className.toLowerCase(),
-                  partOfSpeech: 'Noun',
-                  difficultyLevel: 'A1',
-                  box: boxCoords,
-                ),
-              );
-            }
+            detectedObjects.add(lexicon.toDetectedObject(
+              id: id,
+              box: boxCoords,
+              confidence: res.confidence,
+            ));
           }
 
           if (detectedObjects.isNotEmpty) {

@@ -18,7 +18,27 @@ class AnalysisResult {
     this.ragContext,
   });
 
+  /// Returns only the detected objects that meet or exceed the confidence threshold
+  List<DetectedObject> get confidentObjects =>
+      detectedObjects.where((o) => o.isConfident()).toList();
+
+  /// Returns objects meeting a specific confidence threshold
+  List<DetectedObject> getConfidentObjects([double threshold = DetectedObject.defaultConfidenceThreshold]) =>
+      detectedObjects.where((o) => o.isConfident(threshold)).toList();
+
   DetectedObject? get primaryObject {
+    // 1. Prefer matching primaryObjectId if it meets the confidence threshold
+    for (final obj in detectedObjects) {
+      if (obj.id == primaryObjectId && obj.isConfident()) {
+        return obj;
+      }
+    }
+    // 2. Next, select the first object that meets the confidence threshold
+    final confident = confidentObjects;
+    if (confident.isNotEmpty) {
+      return confident.first;
+    }
+    // 3. Fallback to primaryObjectId even if lower confidence (prevents empty/crash state)
     for (final obj in detectedObjects) {
       if (obj.id == primaryObjectId) {
         return obj;

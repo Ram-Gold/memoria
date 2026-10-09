@@ -25,12 +25,8 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
     final query = ref.watch(scrapbookSearchQueryProvider);
     final asyncPolaroids = ref.watch(scrapbookFilteredPolaroidsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Memoria Scrapbook'),
-      ),
-      body: Column(
-        children: [
+    return Column(
+      children: [
           // Indexed Search Field
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
@@ -104,7 +100,10 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                         const Text('Take a picture with the camera to start learning!'),
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
-                          onPressed: () => context.go('/'),
+                          onPressed: () {
+                            ref.read(navigationIndexProvider.notifier).state = 0;
+                            context.go('/');
+                          },
                           icon: const Icon(Icons.camera_alt),
                           label: const Text('Open Camera'),
                         ),
@@ -164,8 +163,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
+    }
   }
-}
 

@@ -96,7 +96,8 @@ Example 1 (Ceramic coffee mug):
   "secondary_script": "コーヒーカップ",
   "transliteration": "koohii kappu",
   "part_of_speech": "Noun",
-  "difficulty_level": "N5"
+  "difficulty_level": "N5",
+  "confidence": 0.95
 }
 
 Example 2 (Study book):
@@ -106,7 +107,8 @@ Example 2 (Study book):
   "secondary_script": "ほん",
   "transliteration": "hon",
   "part_of_speech": "Noun",
-  "difficulty_level": "N5"
+  "difficulty_level": "N5",
+  "confidence": 0.92
 }
 
 STRICT JSON OUTPUT REQUIRED:
@@ -124,6 +126,7 @@ STRICT JSON OUTPUT REQUIRED:
       "transliteration": "pronunciation / romaji",
       "part_of_speech": "Noun",
       "difficulty_level": "A1 or N5",
+      "confidence": 0.95,
       "box_2d": [150, 150, 850, 850]
     }
   ]

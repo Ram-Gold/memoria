@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/languages/language_profile.dart';
@@ -6,8 +7,13 @@ import '../data/repositories/polaroid_repository.dart';
 import '../data/services/local_gemma_vision_service.dart';
 import '../data/services/local_mlkit_vision_service.dart';
 import '../data/services/mistral_vision_service.dart';
+import '../domain/models/detected_object.dart';
 import '../domain/models/polaroid.dart';
 import '../domain/services/vision_service.dart';
+
+final navigationIndexProvider = StateProvider<int>((ref) => 0);
+final cameraFlashModeProvider = StateProvider<FlashMode>((ref) => FlashMode.auto);
+final cameraAspectRatioProvider = StateProvider<String>((ref) => '1:1');
 
 enum AiVisionMode {
   cloudMistral,
@@ -58,6 +64,11 @@ final polaroidRepositoryProvider = Provider<PolaroidRepository>((ref) {
 final activeLanguageProvider = StateProvider<LanguageProfile>((ref) {
   // Default to Japanese (Tier 1 focus)
   return LanguageRegistry.japanese;
+});
+
+/// Minimum confidence score threshold required for objects to appear in the UI
+final confidenceThresholdProvider = StateProvider<double>((ref) {
+  return DetectedObject.defaultConfidenceThreshold;
 });
 
 class PolaroidsNotifier extends StateNotifier<AsyncValue<List<Polaroid>>> {

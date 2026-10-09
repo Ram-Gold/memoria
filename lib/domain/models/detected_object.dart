@@ -7,7 +7,10 @@ class DetectedObject {
   final String? transliteration;
   final String? partOfSpeech;
   final String? difficultyLevel;
+  final double confidence;
   final List<int> box; // [ymin, xmin, ymax, xmax] (0 to 1000)
+
+  static const double defaultConfidenceThreshold = 0.60;
 
   const DetectedObject({
     required this.id,
@@ -18,6 +21,7 @@ class DetectedObject {
     this.transliteration,
     this.partOfSpeech,
     this.difficultyLevel,
+    this.confidence = 1.0,
     required this.box,
   });
 
@@ -30,6 +34,7 @@ class DetectedObject {
     String? transliteration,
     String? partOfSpeech,
     String? difficultyLevel,
+    double? confidence,
     List<int> box = const [],
   }) {
     return DetectedObject(
@@ -41,6 +46,7 @@ class DetectedObject {
       transliteration: transliteration ?? this.transliteration,
       partOfSpeech: partOfSpeech ?? this.partOfSpeech,
       difficultyLevel: difficultyLevel ?? this.difficultyLevel,
+      confidence: confidence ?? this.confidence,
       box: box.isNotEmpty ? box : this.box,
     );
   }
@@ -53,6 +59,21 @@ class DetectedObject {
       parsedBox = (json['bounding_box'] as List).map((e) => (e as num).toInt()).toList();
     }
 
+    // Support confidence / confidence_score / confidentiality variations
+    double parsedConfidence = 1.0;
+    final rawConf = json['confidence'] ??
+        json['confidence_score'] ??
+        json['confidenciality_score'] ??
+        json['confidentiality_score'] ??
+        json['confidenciality'];
+    if (rawConf is num) {
+      parsedConfidence = rawConf.toDouble();
+      // Normalize if provided on a 0-100 scale
+      if (parsedConfidence > 1.0 && parsedConfidence <= 100.0) {
+        parsedConfidence /= 100.0;
+      }
+    }
+
     return DetectedObject(
       id: json['id']?.toString() ?? 'obj_0',
       polaroidId: polaroidId,
@@ -62,6 +83,7 @@ class DetectedObject {
       transliteration: json['transliteration']?.toString(),
       partOfSpeech: json['part_of_speech']?.toString() ?? 'Noun',
       difficultyLevel: json['difficulty_level']?.toString() ?? 'A1',
+      confidence: parsedConfidence.clamp(0.0, 1.0),
       box: parsedBox,
     );
   }
@@ -76,6 +98,7 @@ class DetectedObject {
       'transliteration': transliteration,
       'part_of_speech': partOfSpeech,
       'difficulty_level': difficultyLevel,
+      'confidence': confidence,
       'box_2d': box,
     };
   }
@@ -90,6 +113,7 @@ class DetectedObject {
       'transliteration': transliteration,
       'part_of_speech': partOfSpeech,
       'difficulty_level': difficultyLevel,
+      'confidence': confidence,
       'box_ymin': box.isNotEmpty ? box[0] : 0,
       'box_xmin': box.length > 1 ? box[1] : 0,
       'box_ymax': box.length > 2 ? box[2] : 1000,
@@ -107,6 +131,7 @@ class DetectedObject {
       transliteration: map['transliteration']?.toString(),
       partOfSpeech: map['part_of_speech']?.toString(),
       difficultyLevel: map['difficulty_level']?.toString(),
+      confidence: (map['confidence'] as num?)?.toDouble() ?? 1.0,
       box: [
         (map['box_ymin'] as num?)?.toInt() ?? 0,
         (map['box_xmin'] as num?)?.toInt() ?? 0,
@@ -115,4 +140,12 @@ class DetectedObject {
       ],
     );
   }
+
+  /// Whether this detected object meets the required confidence threshold
+  bool isConfident([double threshold = defaultConfidenceThreshold]) {
+    return confidence >= threshold;
+  }
+
+  /// Percentage score (0 - 100) for display badges
+  int get confidencePercentage => (confidence * 100).round().clamp(0, 100);
 }

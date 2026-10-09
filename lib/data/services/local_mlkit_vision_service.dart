@@ -29,8 +29,8 @@ class LocalMlKitVisionService implements VisionService {
 
   void _initLabeler() {
     try {
-      // 55% confidence threshold to weed out false positives
-      final options = ImageLabelerOptions(confidenceThreshold: 0.55);
+      // Allow candidates with >= 40% confidence through so confidence threshold filtering applies uniformly
+      final options = ImageLabelerOptions(confidenceThreshold: 0.40);
       _labeler = ImageLabeler(options: options);
       _isInitialized = true;
     } catch (e) {
@@ -72,18 +72,40 @@ class LocalMlKitVisionService implements VisionService {
         );
 
         if (labels.isNotEmpty) {
-          // Find the best label that matches our pedagogical lexicon
-          final detectedObjects = <DetectedObject>[];
-          int objectIdx = 1;
+          // 1. Filter, deduplicate by canonical class, and score by perceptual saliency
+          final candidateMap = <String, _ScoredLabel>{};
 
           for (final label in labels) {
-            final text = label.label.toLowerCase();
+            final raw = label.label.trim();
+            final lower = raw.toLowerCase();
+            if (!_isSpecificEverydayObject(lower)) continue;
 
-            // Prioritize specific physical objects over generic descriptors (e.g. "liquid", "font", "circle")
-            if (LocalObjectLexicon.hasMapping(text) || _isSpecificEverydayObject(text)) {
+            final canonical = LocalObjectLexicon.normalizeClassName(lower);
+            final saliencyWeight = LocalObjectLexicon.getSaliencyWeight(canonical);
+            final score = label.confidence * saliencyWeight;
+
+            // Keep highest scoring label for this canonical class
+            if (!candidateMap.containsKey(canonical) || score > candidateMap[canonical]!.score) {
+              candidateMap[canonical] = _ScoredLabel(
+                rawLabel: raw,
+                canonical: canonical,
+                confidence: label.confidence,
+                score: score,
+              );
+            }
+          }
+
+          final sortedCandidates = candidateMap.values.toList()
+            ..sort((a, b) => b.score.compareTo(a.score));
+
+          if (sortedCandidates.isNotEmpty) {
+            final detectedObjects = <DetectedObject>[];
+            int objectIdx = 1;
+
+            for (final cand in sortedCandidates.take(4)) {
               final id = 'obj_0$objectIdx';
-              final lexicon = LocalObjectLexicon.lookup(
-                className: text,
+              final lexicon = LocalObjectLexicon.synthesizeEntry(
+                label: cand.canonical,
                 langCode: language.code,
               );
 
@@ -94,28 +116,14 @@ class LocalMlKitVisionService implements VisionService {
                 800,
               ];
 
-              if (lexicon != null) {
-                detectedObjects.add(lexicon.toDetectedObject(id: id, box: boxCoords));
-              } else {
-                detectedObjects.add(
-                  DetectedObject(
-                    id: id,
-                    labelEn: label.label,
-                    targetWord: label.label,
-                    secondaryScript: label.label.toLowerCase(),
-                    transliteration: label.label.toLowerCase(),
-                    partOfSpeech: 'Noun',
-                    difficultyLevel: 'A1',
-                    box: boxCoords,
-                  ),
-                );
-              }
+              detectedObjects.add(lexicon.toDetectedObject(
+                id: id,
+                box: boxCoords,
+                confidence: cand.confidence,
+              ));
               objectIdx++;
-              if (detectedObjects.length >= 4) break;
             }
-          }
 
-          if (detectedObjects.isNotEmpty) {
             final primary = detectedObjects.first;
             return AnalysisResult(
               sessionId: 'mem_mlkit_${DateTime.now().millisecondsSinceEpoch}',
@@ -144,7 +152,9 @@ class LocalMlKitVisionService implements VisionService {
   bool _isSpecificEverydayObject(String label) {
     const ignoredGeneric = {
       'rectangle', 'circle', 'square', 'pattern', 'font', 'liquid',
-      'material property', 'wood', 'plastic', 'glass', 'metal', 'sky'
+      'material property', 'wood', 'plastic', 'glass', 'metal', 'sky',
+      'line', 'snapshot', 'photography', 'parallel', 'triangle', 'slope',
+      'room', 'floor', 'ceiling', 'flooring', 'shade', 'shadow'
     };
     return !ignoredGeneric.contains(label);
   }
@@ -152,4 +162,18 @@ class LocalMlKitVisionService implements VisionService {
   void dispose() {
     _labeler?.close();
   }
+}
+
+class _ScoredLabel {
+  final String rawLabel;
+  final String canonical;
+  final double confidence;
+  final double score;
+
+  const _ScoredLabel({
+    required this.rawLabel,
+    required this.canonical,
+    required this.confidence,
+    required this.score,
+  });
 }

@@ -54,6 +54,7 @@ class MockVisionService implements VisionService {
             transliteration: 'koohii kappu',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.95,
             box: [450, 680, 850, 920],
           ),
           const DetectedObject(
@@ -64,6 +65,7 @@ class MockVisionService implements VisionService {
             transliteration: 'hon',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.88,
             box: [180, 160, 780, 700],
           ),
           const DetectedObject(
@@ -74,6 +76,7 @@ class MockVisionService implements VisionService {
             transliteration: 'tsukue',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.52,
             box: [50, 50, 950, 950],
           ),
         ],
@@ -90,6 +93,7 @@ class MockVisionService implements VisionService {
             transliteration: 'jitensha',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.96,
             box: [320, 210, 880, 790],
           ),
           const DetectedObject(
@@ -100,6 +104,7 @@ class MockVisionService implements VisionService {
             transliteration: 'toori',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N4',
+            confidence: 0.82,
             box: [100, 50, 950, 950],
           ),
           const DetectedObject(
@@ -110,6 +115,7 @@ class MockVisionService implements VisionService {
             transliteration: 'ki',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.48,
             box: [60, 680, 720, 940],
           ),
         ],
@@ -126,6 +132,7 @@ class MockVisionService implements VisionService {
             transliteration: 'kanyou shokubutsu',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N3',
+            confidence: 0.94,
             box: [220, 310, 840, 760],
           ),
           const DetectedObject(
@@ -136,6 +143,7 @@ class MockVisionService implements VisionService {
             transliteration: 'mado',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.78,
             box: [50, 580, 780, 950],
           ),
           const DetectedObject(
@@ -146,6 +154,7 @@ class MockVisionService implements VisionService {
             transliteration: 'isu',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.54,
             box: [410, 80, 920, 480],
           ),
         ],
@@ -162,6 +171,7 @@ class MockVisionService implements VisionService {
             transliteration: 'pasokon',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.95,
             box: [280, 220, 790, 810],
           ),
           const DetectedObject(
@@ -172,6 +182,7 @@ class MockVisionService implements VisionService {
             transliteration: 'tokei',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.84,
             box: [90, 750, 320, 930],
           ),
           const DetectedObject(
@@ -182,6 +193,7 @@ class MockVisionService implements VisionService {
             transliteration: 'mannenhitsu',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N3',
+            confidence: 0.50,
             box: [640, 110, 860, 310],
           ),
         ],
@@ -198,6 +210,7 @@ class MockVisionService implements VisionService {
             transliteration: 'ocha',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.94,
             box: [410, 560, 820, 880],
           ),
           const DetectedObject(
@@ -208,6 +221,7 @@ class MockVisionService implements VisionService {
             transliteration: 'sara',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N4',
+            confidence: 0.82,
             box: [310, 180, 870, 720],
           ),
           const DetectedObject(
@@ -218,6 +232,7 @@ class MockVisionService implements VisionService {
             transliteration: 'hashi',
             partOfSpeech: 'Noun',
             difficultyLevel: 'N5',
+            confidence: 0.45,
             box: [720, 220, 880, 820],
           ),
         ],
@@ -247,6 +262,7 @@ class MockVisionService implements VisionService {
             transliteration: '[ak-lat]',
             partOfSpeech: 'Noun',
             difficultyLevel: 'A1',
+            confidence: 0.95,
             box: const [150, 180, 820, 750],
           ),
           DetectedObject(
@@ -257,6 +273,7 @@ class MockVisionService implements VisionService {
             transliteration: '[ta-sa]',
             partOfSpeech: 'Noun',
             difficultyLevel: 'A1',
+            confidence: 0.88,
             box: const [480, 720, 850, 930],
           ),
           DetectedObject(
@@ -267,6 +284,7 @@ class MockVisionService implements VisionService {
             transliteration: '[me-sa]',
             partOfSpeech: 'Noun',
             difficultyLevel: 'A2',
+            confidence: 0.50,
             box: const [50, 50, 950, 950],
           ),
         ],
@@ -282,6 +300,7 @@ class MockVisionService implements VisionService {
             transliteration: '[pu-no]',
             partOfSpeech: 'Noun',
             difficultyLevel: 'A1',
+            confidence: 0.94,
             box: const [110, 210, 880, 780],
           ),
           DetectedObject(
@@ -292,6 +311,7 @@ class MockVisionService implements VisionService {
             transliteration: '[da-an]',
             partOfSpeech: 'Noun',
             difficultyLevel: 'A1',
+            confidence: 0.82,
             box: const [480, 120, 950, 890],
           ),
           DetectedObject(
@@ -302,6 +322,7 @@ class MockVisionService implements VisionService {
             transliteration: '[a-raw]',
             partOfSpeech: 'Noun',
             difficultyLevel: 'A1',
+            confidence: 0.45,
             box: const [50, 680, 350, 920],
           ),
         ],
@@ -317,6 +338,7 @@ class MockVisionService implements VisionService {
             transliteration: '[tu-big]',
             partOfSpeech: 'Noun',
             difficultyLevel: 'A1',
+            confidence: 0.92,
             box: const [320, 480, 860, 820],
           ),
           DetectedObject(
@@ -327,6 +349,7 @@ class MockVisionService implements VisionService {
             transliteration: '[ping-gan]',
             partOfSpeech: 'Noun',
             difficultyLevel: 'A2',
+            confidence: 0.86,
             box: const [290, 160, 820, 680],
           ),
         ],
@@ -356,6 +379,7 @@ class MockVisionService implements VisionService {
             transliteration: '[tah-sah]',
             partOfSpeech: 'Noun • f',
             difficultyLevel: 'A1',
+            confidence: 0.95,
             box: [480, 720, 850, 930],
           ),
           const DetectedObject(
@@ -366,6 +390,7 @@ class MockVisionService implements VisionService {
             transliteration: '[lee-bro]',
             partOfSpeech: 'Noun • m',
             difficultyLevel: 'A1',
+            confidence: 0.88,
             box: [150, 180, 820, 750],
           ),
           const DetectedObject(
@@ -376,6 +401,7 @@ class MockVisionService implements VisionService {
             transliteration: '[meh-sah]',
             partOfSpeech: 'Noun • f',
             difficultyLevel: 'A1',
+            confidence: 0.48,
             box: [50, 50, 950, 950],
           ),
         ],
@@ -391,6 +417,7 @@ class MockVisionService implements VisionService {
             transliteration: '[bee-see-kleh-tah]',
             partOfSpeech: 'Noun • f',
             difficultyLevel: 'A1',
+            confidence: 0.94,
             box: [320, 210, 880, 790],
           ),
           const DetectedObject(
@@ -401,6 +428,7 @@ class MockVisionService implements VisionService {
             transliteration: '[kah-yeh]',
             partOfSpeech: 'Noun • f',
             difficultyLevel: 'A1',
+            confidence: 0.52,
             box: [100, 50, 950, 950],
           ),
         ],
