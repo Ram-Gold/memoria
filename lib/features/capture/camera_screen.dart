@@ -316,8 +316,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
         apertureOnScreen = Rect.fromPoints(topLeft, bottomRight);
       } else {
         final format = ref.read(selectedPolaroidFormatProvider);
-        final apertureW = 286.0;
-        final apertureH = 286.0 / format.ratio;
+        final apertureW = 310.0;
+        final apertureH = 310.0 / format.ratio;
         final left = (screenSize.width - apertureW) / 2.0;
         final top = (screenSize.height - apertureH) / 2.0 - 20.0;
         apertureOnScreen = Rect.fromLTWH(left, top, apertureW, apertureH);
@@ -679,9 +679,9 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               // The Hollow Polaroid Card
-                              SizedBox(
-                                width: 310,
-                                height: 12 + (286 / format.ratio) + 52,
+                                SizedBox(
+                                width: 336,
+                                height: 12 + (310 / format.ratio) + 52,
                                 child: Stack(
                                   clipBehavior: Clip.none,
                                   children: [
@@ -690,10 +690,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                                       child: CustomPaint(
                                         painter: PolaroidCardHollowPainter(
                                           apertureRect: Rect.fromLTWH(
+                                            13,
                                             12,
-                                            12,
-                                            286,
-                                            286 / format.ratio,
+                                            310,
+                                            310 / format.ratio,
                                           ),
                                           cardColor: MemoriaTokens.polaroidCard,
                                           borderRadius: 6.0,
@@ -703,10 +703,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
 
                                     // 2. The Aperture Window
                                     Positioned(
-                                      left: 12,
+                                      left: 13,
                                       top: 12,
-                                      width: 286,
-                                      height: 286 / format.ratio,
+                                      width: 310,
+                                      height: 310 / format.ratio,
                                       child: Container(
                                         key: _windowKey,
                                         decoration: BoxDecoration(
@@ -938,7 +938,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                   ),
                 ),
 
-                const SizedBox(height: 84),
+                const SizedBox(height: 72),
               ],
             ),
           ),
