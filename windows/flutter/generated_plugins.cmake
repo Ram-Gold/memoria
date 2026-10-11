@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_gemma
   flutter_tts
   gal
+  pasteboard
   share_plus
   url_launcher_windows
 )

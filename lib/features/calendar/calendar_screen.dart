@@ -109,9 +109,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
             final selectedDateKey = _selectedDate != null ? _formatDateKey(_selectedDate!) : null;
             final selectedDayExposures = selectedDateKey != null ? (dateMap[selectedDateKey] ?? []) : <Polaroid>[];
+            final screenWidth = MediaQuery.sizeOf(context).width;
+            final isSmallScreen = screenWidth < 380;
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+              padding: EdgeInsets.fromLTRB(isSmallScreen ? 12 : 16, 8, isSmallScreen ? 12 : 16, 96),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -119,47 +121,58 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: _prevMonth,
-                            icon: const Icon(LucideIcons.chevronLeft),
-                            style: IconButton.styleFrom(
-                              backgroundColor: MemoriaTokens.surfaceContainer,
-                              iconSize: 20,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            IconButton(
+                              onPressed: _prevMonth,
+                              icon: const Icon(LucideIcons.chevronLeft),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                              style: IconButton.styleFrom(
+                                backgroundColor: MemoriaTokens.surfaceContainer,
+                                iconSize: 18,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              width: 24,
-                              height: 24,
-                              fit: BoxFit.cover,
+                            const SizedBox(width: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                width: 22,
+                                height: 22,
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _formatMonthYear(_currentMonth),
-                            style: MemoriaTokens.headlineMd(),
-                          ),
-                        ],
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                _formatMonthYear(_currentMonth),
+                                style: isSmallScreen ? MemoriaTokens.headlineSm() : MemoriaTokens.headlineMd(),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 6),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           GestureDetector(
                             onTap: _jumpToToday,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                               decoration: BoxDecoration(
                                 color: MemoriaTokens.surfaceContainer,
                                 borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
                                 border: Border.all(color: MemoriaTokens.polaroidBorder),
                               ),
                               child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(LucideIcons.calendar, size: 14, color: MemoriaTokens.onSurfaceVariant),
+                                  const Icon(LucideIcons.calendar, size: 13, color: MemoriaTokens.onSurfaceVariant),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Today',
@@ -173,9 +186,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           IconButton(
                             onPressed: _nextMonth,
                             icon: const Icon(LucideIcons.chevronRight),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                             style: IconButton.styleFrom(
                               backgroundColor: MemoriaTokens.surfaceContainer,
-                              iconSize: 20,
+                              iconSize: 18,
                             ),
                           ),
                         ],
@@ -218,11 +233,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
                                 .map(
-                                  (day) => SizedBox(
-                                    width: 38,
+                                  (day) => Expanded(
                                     child: Text(
                                       day,
                                       textAlign: TextAlign.center,
@@ -421,16 +434,23 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(LucideIcons.bookOpen, color: MemoriaTokens.primary, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Daily Log • $dateStr',
-                    style: MemoriaTokens.headlineSm(),
-                  ),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(LucideIcons.bookOpen, color: MemoriaTokens.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Daily Log • $dateStr',
+                        style: MemoriaTokens.headlineSm(),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '${exposures.length} Film${exposures.length == 1 ? '' : 's'}',
                 style: MemoriaTokens.labelSm(color: MemoriaTokens.primary),
@@ -527,16 +547,22 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               Text(
                                 p.selectedWord,
                                 style: MemoriaTokens.headlineSm(color: MemoriaTokens.onSurface),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 '${p.secondaryScript ?? ""} · ${p.transliteration ?? ""}',
                                 style: MemoriaTokens.bodySm(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 '$timeStr • ${p.languageCode.toUpperCase()}',
                                 style: MemoriaTokens.telemetryMono(fontSize: 9),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -544,6 +570,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
                         // Audio button & Chevron
                         IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                           icon: const Icon(LucideIcons.volume2, size: 20, color: MemoriaTokens.primary),
                           onPressed: () {
                             _ttsService.speak(

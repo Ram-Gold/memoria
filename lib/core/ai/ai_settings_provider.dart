@@ -10,7 +10,7 @@ const String _prefKeyPrefixApiKey = 'memoria_ai_api_key_';
 
 /// Notifier to manage AI engine mode (local vs cloud)
 class AiEngineModeNotifier extends StateNotifier<AiEngineMode> {
-  AiEngineModeNotifier() : super(AiEngineMode.local) {
+  AiEngineModeNotifier() : super(AiEngineMode.cloud) {
     _load();
   }
 
@@ -19,7 +19,7 @@ class AiEngineModeNotifier extends StateNotifier<AiEngineMode> {
       final prefs = await SharedPreferences.getInstance();
       final saved = prefs.getString(_prefKeyEngineMode);
       if (saved != null) {
-        state = saved == 'cloud' ? AiEngineMode.cloud : AiEngineMode.local;
+        state = saved == 'local' ? AiEngineMode.local : AiEngineMode.cloud;
       }
     } catch (e) {
       developer.log('Error loading AiEngineMode: $e', name: 'AiSettings');
@@ -43,7 +43,7 @@ final aiEngineModeProvider = StateNotifierProvider<AiEngineModeNotifier, AiEngin
 
 /// Notifier to manage selected cloud provider
 class SelectedCloudProviderNotifier extends StateNotifier<AiCloudProvider> {
-  SelectedCloudProviderNotifier() : super(AiCloudProvider.mistral) {
+  SelectedCloudProviderNotifier() : super(AiCloudProvider.gemini) {
     _load();
   }
 

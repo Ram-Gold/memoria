@@ -27,8 +27,8 @@ enum AiCloudProvider {
   gemini(
     id: 'gemini',
     displayName: 'Google Gemini',
-    defaultModel: 'gemini-1.5-flash',
-    description: 'Gemini 1.5 Flash • Ultra-fast multimodal reasoning',
+    defaultModel: 'gemini-2.0-flash',
+    description: 'Gemini 2.0 Flash • Ultra-fast, 258 image tokens flat, free tier',
     brandIcon: BrandIcons.gemini,
     envKeyName: 'GEMINI_API_KEY',
     consoleUrl: 'https://aistudio.google.com/app/apikey',
@@ -64,7 +64,7 @@ enum AiCloudProvider {
   static AiCloudProvider fromId(String id) {
     return AiCloudProvider.values.firstWhere(
       (p) => p.id == id,
-      orElse: () => AiCloudProvider.mistral,
+      orElse: () => AiCloudProvider.gemini,
     );
   }
 }

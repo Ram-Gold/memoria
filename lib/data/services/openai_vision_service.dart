@@ -87,7 +87,7 @@ Return pure valid JSON conforming strictly to this format:
                   'type': 'image_url',
                   'image_url': {
                     'url': 'data:image/jpeg;base64,$base64Image',
-                    'detail': 'low',
+                    'detail': 'auto',
                   },
                 },
               ],

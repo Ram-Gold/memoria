@@ -150,12 +150,16 @@ class _AiSettingsSheetState extends ConsumerState<AiSettingsSheet> {
                                     : MemoriaTokens.onSurfaceVariant,
                               ),
                               const SizedBox(width: 6),
-                              Text(
-                                'Local On-Device',
-                                style: MemoriaTokens.labelSm(
-                                  color: engineMode == AiEngineMode.local
-                                      ? MemoriaTokens.primaryDark
-                                      : MemoriaTokens.onSurfaceVariant,
+                              Flexible(
+                                child: Text(
+                                  'Local On-Device',
+                                  style: MemoriaTokens.labelSm(
+                                    color: engineMode == AiEngineMode.local
+                                        ? MemoriaTokens.primaryDark
+                                        : MemoriaTokens.onSurfaceVariant,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                             ],
@@ -192,12 +196,16 @@ class _AiSettingsSheetState extends ConsumerState<AiSettingsSheet> {
                                     : MemoriaTokens.onSurfaceVariant,
                               ),
                               const SizedBox(width: 6),
-                              Text(
-                                'Cloud Vision (BYOK)',
-                                style: MemoriaTokens.labelSm(
-                                  color: engineMode == AiEngineMode.cloud
-                                      ? MemoriaTokens.primaryDark
-                                      : MemoriaTokens.onSurfaceVariant,
+                              Flexible(
+                                child: Text(
+                                  'Cloud Vision (BYOK)',
+                                  style: MemoriaTokens.labelSm(
+                                    color: engineMode == AiEngineMode.cloud
+                                        ? MemoriaTokens.primaryDark
+                                        : MemoriaTokens.onSurfaceVariant,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                             ],
@@ -263,12 +271,17 @@ class _AiSettingsSheetState extends ConsumerState<AiSettingsSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'CLOUD PROVIDERS (BRING YOUR OWN KEY):',
-                      style: MemoriaTokens.labelSm(color: MemoriaTokens.primaryDark),
+                    Expanded(
+                      child: Text(
+                        'CLOUD PROVIDERS (BRING YOUR OWN KEY):',
+                        style: MemoriaTokens.labelSm(color: MemoriaTokens.primaryDark),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
-                      'Mistral is default',
+                      'Gemini is recommended',
                       style: MemoriaTokens.labelSm(color: MemoriaTokens.outline),
                     ),
                   ],
@@ -298,7 +311,7 @@ class _AiSettingsSheetState extends ConsumerState<AiSettingsSheet> {
                     child: Column(
                       children: [
                         ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                           onTap: () {
                             ref
                                 .read(selectedCloudProviderProvider.notifier)
@@ -325,14 +338,16 @@ class _AiSettingsSheetState extends ConsumerState<AiSettingsSheet> {
                               ),
                             ),
                           ),
-                          title: Row(
+                          title: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 6,
+                            runSpacing: 2,
                             children: [
                               Text(
                                 provider.displayName,
                                 style: MemoriaTokens.labelMd(),
                               ),
-                              if (provider == AiCloudProvider.mistral) ...[
-                                const SizedBox(width: 6),
+                              if (provider == AiCloudProvider.gemini) ...[
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                   decoration: BoxDecoration(
@@ -340,7 +355,7 @@ class _AiSettingsSheetState extends ConsumerState<AiSettingsSheet> {
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    'Default',
+                                    'Recommended',
                                     style: MemoriaTokens.labelSm(color: MemoriaTokens.primaryDark),
                                   ),
                                 ),
@@ -380,8 +395,10 @@ class _AiSettingsSheetState extends ConsumerState<AiSettingsSheet> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 4),
                               IconButton(
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(4),
                                 icon: Icon(
                                   isEditing ? LucideIcons.chevronUp : LucideIcons.keyRound,
                                   size: 18,
@@ -589,10 +606,15 @@ class _AiSettingsSheetState extends ConsumerState<AiSettingsSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Tier 1: Instant Vision',
-                            style: MemoriaTokens.labelSm(color: MemoriaTokens.onSurface),
+                          Expanded(
+                            child: Text(
+                              'Tier 1: Instant Vision',
+                              style: MemoriaTokens.labelSm(color: MemoriaTokens.onSurface),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                           ),
+                          const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -657,30 +679,34 @@ class _AiSettingsSheetState extends ConsumerState<AiSettingsSheet> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: vlmManager.hasModel
-                            ? MemoriaTokens.primaryContainer
-                            : (vlmManager.isDownloading
-                                ? MemoriaTokens.tertiaryContainer
-                                : MemoriaTokens.surfaceContainerHigh),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        vlmManager.hasModel
-                            ? 'Ready • ${vlmManager.formattedModelSize}'
-                            : (vlmManager.isDownloading
-                                ? 'Downloading ${vlmManager.currentStatus.formattedProgress}'
-                                : 'Optional (~1.8 GB)'),
-                        style: MemoriaTokens.labelSm(
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
                           color: vlmManager.hasModel
-                              ? MemoriaTokens.primary
+                              ? MemoriaTokens.primaryContainer
                               : (vlmManager.isDownloading
-                                  ? MemoriaTokens.tertiary
-                                  : MemoriaTokens.onSurfaceVariant),
-                        ).copyWith(fontSize: 10, fontWeight: FontWeight.bold),
+                                  ? MemoriaTokens.tertiaryContainer
+                                  : MemoriaTokens.surfaceContainerHigh),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          vlmManager.hasModel
+                              ? 'Ready • ${vlmManager.formattedModelSize}'
+                              : (vlmManager.isDownloading
+                                  ? 'Downloading ${vlmManager.currentStatus.formattedProgress}'
+                                  : 'Optional (~1.8 GB)'),
+                          style: MemoriaTokens.labelSm(
+                            color: vlmManager.hasModel
+                                ? MemoriaTokens.primary
+                                : (vlmManager.isDownloading
+                                    ? MemoriaTokens.tertiary
+                                    : MemoriaTokens.onSurfaceVariant),
+                          ).copyWith(fontSize: 10, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                       ),
                     ),
                   ],

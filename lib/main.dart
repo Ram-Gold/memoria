@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
+import 'package:flutter_grab/flutter_grab.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/memoria_theme.dart';
 import 'app/router.dart';
@@ -37,6 +38,7 @@ class MemoriaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: MemoriaTheme.lightTheme,
       routerConfig: appRouter,
+      builder: FlutterGrab.builder,
     );
   }
 }

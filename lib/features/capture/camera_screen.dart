@@ -522,6 +522,13 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
         : null;
     final totalCount = polaroidsAsync.valueOrNull?.length ?? 0;
 
+    final screenSize = MediaQuery.sizeOf(context);
+    final isCompactHeight = screenSize.height < 720;
+    final isCompactWidth = screenSize.width < 380;
+    final shutterSize = isCompactHeight ? 68.0 : 80.0;
+    final sideButtonSize = isCompactHeight ? 42.0 : 48.0;
+    final bottomSpacerHeight = isCompactHeight ? 56.0 : 70.0;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -822,7 +829,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
 
                 // Bottom Tactile Shutter Dock
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 4.0),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isCompactWidth ? 20.0 : 24.0,
+                    vertical: isCompactHeight ? 2.0 : 4.0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -835,8 +845,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                           clipBehavior: Clip.none,
                           children: [
                             Container(
-                              width: 48,
-                              height: 48,
+                              width: sideButtonSize,
+                              height: sideButtonSize,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(MemoriaTokens.radiusSm),
                                 border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
@@ -848,7 +858,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                                       File(latestPolaroid.imagePath),
                                       fit: BoxFit.cover,
                                     )
-                                  : const Icon(LucideIcons.images, color: Colors.white70, size: 22),
+                                  : Icon(LucideIcons.images, color: Colors.white70, size: isCompactHeight ? 20 : 22),
                             ),
                             if (totalCount > 0)
                               Positioned(
@@ -879,13 +889,13 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                       GestureDetector(
                         onTap: _isCapturing ? null : _takePicture,
                         child: Container(
-                          width: 80,
-                          height: 80,
+                          width: shutterSize,
+                          height: shutterSize,
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.transparent,
-                            border: Border.all(color: Colors.white, width: 3.5),
+                            border: Border.all(color: Colors.white, width: isCompactHeight ? 3.0 : 3.5),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x66000000),
@@ -908,10 +918,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                             ),
                             child: Center(
                               child: _isCapturing
-                                  ? const SizedBox(
-                                      width: 26,
-                                      height: 26,
-                                      child: CircularProgressIndicator(
+                                  ? SizedBox(
+                                      width: isCompactHeight ? 22 : 26,
+                                      height: isCompactHeight ? 22 : 26,
+                                      child: const CircularProgressIndicator(
                                         color: Colors.black87,
                                         strokeWidth: 2.5,
                                       ),
@@ -953,17 +963,17 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                           }
                         },
                         child: Container(
-                          width: 48,
-                          height: 48,
+                          width: sideButtonSize,
+                          height: sideButtonSize,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.black.withValues(alpha: 0.45),
                             border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             LucideIcons.switchCamera,
                             color: Colors.white,
-                            size: 22,
+                            size: isCompactHeight ? 20 : 22,
                           ),
                         ),
                       ),
@@ -971,7 +981,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                   ),
                 ),
 
-                const SizedBox(height: 72),
+                SizedBox(height: bottomSpacerHeight),
               ],
             ),
           ),
