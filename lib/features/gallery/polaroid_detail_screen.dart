@@ -10,9 +10,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../app/providers.dart';
+import '../../core/ai/ai_settings_provider.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/languages/sentence_generator.dart';
 import '../../core/services/app_tts_service.dart';
+import '../../core/services/context_search_service.dart';
+import '../../core/services/sentence_ai_service.dart';
+import '../../core/services/tatoeba_corpus_service.dart';
 import '../../core/theme/memoria_tokens.dart';
 import '../../core/widgets/language_flag_icon.dart';
 import '../../core/widgets/rubber_stamp.dart';
@@ -36,12 +40,76 @@ class PolaroidDetailScreen extends ConsumerStatefulWidget {
 class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
   final GlobalKey _polaroidRepaintKey = GlobalKey();
   final AppTtsService _ttsService = AppTtsService();
+  final SentenceAiService _sentenceAiService = SentenceAiService();
+  final TatoebaCorpusService _tatoebaService = TatoebaCorpusService();
   DetectedObject? _selectedObject;
   bool _isPlayingAudio = false;
   String? _currentlyPlayingSentence;
   bool? _isFavoriteOverride;
   bool _isSharing = false;
   bool _isDownloading = false;
+  List<ExampleSentence>? _cachedAiSentences;
+  bool _isLoadingAiSentences = false;
+  String? _lastLoadedWord;
+
+  Future<void> _fetchAiSentences({
+    required String languageCode,
+    required String targetWord,
+    required String labelEn,
+    String? secondaryScript,
+    String? transliteration,
+    bool forceRefresh = false,
+  }) async {
+    if (_isLoadingAiSentences) return;
+    if (!forceRefresh && _lastLoadedWord == targetWord && _cachedAiSentences != null) {
+      return;
+    }
+    setState(() => _isLoadingAiSentences = true);
+
+    try {
+      List<ExampleSentence> sentences = [];
+
+      // 1. Unless forceRefresh specifically requested fresh AI generation, prioritize Tatoeba Corpus first
+      if (!forceRefresh) {
+        sentences = await _tatoebaService.fetchCorpusSentences(
+          languageCode: languageCode,
+          targetWord: targetWord,
+          transliteration: transliteration,
+          forceRefresh: false,
+        );
+      }
+
+      // 2. If no corpus sentences found or forceRefresh requested, query Gemini AI
+      if (sentences.isEmpty) {
+        final selectedProvider = ref.read(selectedCloudProviderProvider);
+        final apiKeysNotifier = ref.read(aiApiKeysProvider.notifier);
+        final apiKey = apiKeysNotifier.getKey(selectedProvider);
+
+        sentences = await _sentenceAiService.generateSentences(
+          apiKey: apiKey,
+          languageCode: languageCode,
+          targetWord: targetWord,
+          labelEn: labelEn,
+          secondaryScript: secondaryScript,
+          transliteration: transliteration,
+          sceneDescription: null,
+          forceRefresh: forceRefresh,
+        );
+      }
+
+      if (mounted) {
+        setState(() {
+          _cachedAiSentences = sentences;
+          _isLoadingAiSentences = false;
+          _lastLoadedWord = targetWord;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingAiSentences = false);
+      }
+    }
+  }
 
   Future<void> _speakSentence(String sentence, String languageCode) async {
     HapticFeedback.selectionClick();
@@ -90,6 +158,21 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
         orElse: () => widget.polaroid.detectedObjects.first,
       );
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final word = _selectedObject?.targetWord ?? widget.polaroid.selectedWord;
+      final labelEn = _selectedObject?.labelEn ?? widget.polaroid.labelEn ?? 'Object';
+      final secondary = _selectedObject?.secondaryScript ?? widget.polaroid.secondaryScript;
+      final translit = _selectedObject?.transliteration ?? widget.polaroid.transliteration;
+      _fetchAiSentences(
+        languageCode: widget.polaroid.languageCode,
+        targetWord: word,
+        labelEn: labelEn,
+        secondaryScript: secondary,
+        transliteration: translit,
+        forceRefresh: false,
+      );
+    });
   }
 
   Future<void> _speak([DetectedObject? obj]) async {
@@ -738,8 +821,19 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
                       final isSelected = _selectedObject?.id == obj.id;
                       return GestureDetector(
                         onTap: () {
-                          setState(() => _selectedObject = obj);
+                          setState(() {
+                            _selectedObject = obj;
+                            _cachedAiSentences = null;
+                          });
                           _speak(obj);
+                          _fetchAiSentences(
+                            languageCode: widget.polaroid.languageCode,
+                            targetWord: obj.targetWord,
+                            labelEn: obj.labelEn,
+                            secondaryScript: obj.secondaryScript,
+                            transliteration: obj.transliteration,
+                            forceRefresh: false,
+                          );
                         },
                         child: Container(
                           margin: const EdgeInsets.only(top: 8),
@@ -907,13 +1001,14 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
     String? secondaryScript,
     String? transliteration,
   }) {
-    final sentences = SentenceGeneratorService.generate(
-      languageCode: languageCode,
-      targetWord: word,
-      labelEn: labelEn,
-      secondaryScript: secondaryScript,
-      transliteration: transliteration,
-    );
+    final sentences = _cachedAiSentences ??
+        SentenceGeneratorService.generate(
+          languageCode: languageCode,
+          targetWord: word,
+          labelEn: labelEn,
+          secondaryScript: secondaryScript,
+          transliteration: transliteration,
+        );
 
     return Container(
       decoration: BoxDecoration(
@@ -926,20 +1021,96 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Section Title Header
+          // Section Title Header with AI Regenerate Action
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Icon(
-                LucideIcons.sparkles,
-                size: 16,
-                color: MemoriaTokens.primary,
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.sparkles,
+                      size: 16,
+                      color: MemoriaTokens.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'EXAMPLE SENTENCES',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: MemoriaTokens.labelSm(
+                          color: MemoriaTokens.onSurfaceVariant,
+                        ).copyWith(letterSpacing: 1.1, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 8),
-              Text(
-                'EXAMPLE SENTENCES IN CONTEXT',
-                style: MemoriaTokens.labelSm(
-                  color: MemoriaTokens.onSurfaceVariant,
-                ).copyWith(letterSpacing: 1.1, fontWeight: FontWeight.bold),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _isLoadingAiSentences
+                      ? null
+                      : () {
+                          HapticFeedback.selectionClick();
+                          _fetchAiSentences(
+                            languageCode: languageCode,
+                            targetWord: word,
+                            labelEn: labelEn,
+                            secondaryScript: secondaryScript,
+                            transliteration: transliteration,
+                            forceRefresh: true,
+                          );
+                        },
+                  borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: MemoriaTokens.primaryContainer.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+                      border: Border.all(
+                        color: MemoriaTokens.primary.withValues(alpha: 0.3),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_isLoadingAiSentences) ...[
+                          const SizedBox(
+                            width: 11,
+                            height: 11,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.6,
+                              color: MemoriaTokens.primaryDark,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Loading...',
+                            style: MemoriaTokens.labelSm(color: MemoriaTokens.primaryDark).copyWith(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ] else ...[
+                          const Icon(LucideIcons.refreshCw, size: 11, color: MemoriaTokens.primaryDark),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Shuffle',
+                            style: MemoriaTokens.labelSm(color: MemoriaTokens.primaryDark).copyWith(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -1040,7 +1211,86 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
               ),
             );
           }),
+
+          const SizedBox(height: 6),
+
+          // 1-Tap "Explore in the Wild" Deep Links
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'EXPLORE IN THE WILD',
+                style: MemoriaTokens.labelSm(
+                  color: MemoriaTokens.onSurfaceVariant,
+                ).copyWith(letterSpacing: 1.1, fontWeight: FontWeight.bold, fontSize: 10),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildExploreChip(
+                    icon: LucideIcons.search,
+                    label: 'Search "$word"',
+                    onTap: () => ContextSearchService.openGoogleSearch(word, languageCode),
+                  ),
+                  _buildExploreChip(
+                    icon: LucideIcons.bookOpen,
+                    label: ContextSearchService.getDictionaryName(languageCode),
+                    onTap: () => ContextSearchService.openContextDictionary(word, languageCode),
+                  ),
+                  _buildExploreChip(
+                    icon: LucideIcons.languages,
+                    label: 'Translate',
+                    onTap: () => ContextSearchService.openGoogleTranslate(word, languageCode),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildExploreChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: MemoriaTokens.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(MemoriaTokens.radiusPill),
+            border: Border.all(
+              color: MemoriaTokens.polaroidBorder,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: MemoriaTokens.primary),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: MemoriaTokens.labelSm(color: MemoriaTokens.onSurface).copyWith(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

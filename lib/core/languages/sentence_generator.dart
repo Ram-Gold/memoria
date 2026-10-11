@@ -58,16 +58,16 @@ class SentenceGeneratorService {
     final t = (translit != null && translit.isNotEmpty) ? translit : word;
     return [
       ExampleSentence(
-        styleLabel: 'Beginner Pattern',
-        nativeSentence: 'これは素敵な「$word」です。',
-        transliteration: 'Kore wa suteki na $t desu.',
-        englishTranslation: 'This is a wonderful $labelEn.',
+        styleLabel: 'Daily Conversation',
+        nativeSentence: '今日、素敵な「$word」を見つけました。',
+        transliteration: 'Kyou, suteki na $t o mitsukemashita.',
+        englishTranslation: 'Today, I found a lovely $labelEn.',
       ),
       ExampleSentence(
-        styleLabel: 'Everyday Conversation',
-        nativeSentence: 'テーブルの上に「$word」があります。',
-        transliteration: 'Teeburu no ue ni $t ga arimasu.',
-        englishTranslation: 'There is a $labelEn on the table.',
+        styleLabel: 'Practical Usage',
+        nativeSentence: 'この「$word」はとても使いやすいですね。',
+        transliteration: 'Kono $t wa totemo tsukaiyasui desu ne.',
+        englishTranslation: 'This $labelEn is very convenient to use, isn\'t it?',
       ),
     ];
   }
@@ -95,9 +95,9 @@ class SentenceGeneratorService {
       ),
       ExampleSentence(
         styleLabel: 'Pakikipag-usap (Conversation)',
-        nativeSentence: 'Nasa ibabaw ng mesa ang $latin.',
-        transliteration: '[Na-sa i-ba-baw nang me-sa ang $latin.]',
-        englishTranslation: 'The $labelEn is on top of the table.',
+        nativeSentence: 'Gusto kong makita ang $latin mo.',
+        transliteration: '[Gus-to kong ma-ki-ta ang $latin mo.]',
+        englishTranslation: 'I would love to see your $labelEn.',
       ),
     ];
   }
@@ -106,16 +106,16 @@ class SentenceGeneratorService {
     final cleanWord = word.split('/').first.trim();
     return [
       ExampleSentence(
-        styleLabel: 'Patrón Básico (Beginner)',
-        nativeSentence: 'Este es un buen $cleanWord para comenzar el día.',
-        transliteration: '[Es-te es un bwen $cleanWord pa-ra ko-men-sar el di-a]',
-        englishTranslation: 'This is a good $labelEn to start the day.',
+        styleLabel: 'Conversación Diaria',
+        nativeSentence: 'Me gusta mucho este $cleanWord.',
+        transliteration: '[Me gus-ta mu-cho es-te $cleanWord]',
+        englishTranslation: 'I really like this $labelEn.',
       ),
       ExampleSentence(
-        styleLabel: 'Conversación Diaria',
-        nativeSentence: '¿Dónde dejaste el $cleanWord?',
-        transliteration: '[¿Don-de de-has-te el $cleanWord?]',
-        englishTranslation: 'Where did you leave the $labelEn?',
+        styleLabel: 'Expresión Útil',
+        nativeSentence: 'Siempre es bueno tener un $cleanWord cerca.',
+        transliteration: '[Syem-pre es bwe-no te-ner un $cleanWord ser-ka]',
+        englishTranslation: 'It is always good to have a $labelEn nearby.',
       ),
     ];
   }
@@ -124,16 +124,16 @@ class SentenceGeneratorService {
     final cleanWord = word.split('/').first.trim();
     return [
       ExampleSentence(
-        styleLabel: 'Expression Courante (Common)',
-        nativeSentence: 'Voici un joli $cleanWord sur la table.',
-        transliteration: '[Vwa-si un zho-li $cleanWord syr la tabl]',
-        englishTranslation: 'Here is a nice $labelEn on the table.',
-      ),
-      ExampleSentence(
         styleLabel: 'Dialogue Quotidien',
         nativeSentence: 'J’aime beaucoup ce $cleanWord.',
         transliteration: '[Zhem bo-koo suh $cleanWord]',
         englishTranslation: 'I really like this $labelEn.',
+      ),
+      ExampleSentence(
+        styleLabel: 'Expression Courante',
+        nativeSentence: 'Regarde ce joli $cleanWord !',
+        transliteration: '[Ruh-gard suh zho-li $cleanWord]',
+        englishTranslation: 'Look at this nice $labelEn!',
       ),
     ];
   }
@@ -146,16 +146,16 @@ class SentenceGeneratorService {
     }
     return [
       ExampleSentence(
-        styleLabel: 'Grundlegend (Beginner)',
-        nativeSentence: 'Hier ist ein schönes $cleanWord.',
-        transliteration: '[Heer ist ayn shö-nes $cleanWord]',
-        englishTranslation: 'Here is a nice $labelEn.',
+        styleLabel: 'Alltagsgespräch (Daily)',
+        nativeSentence: 'Ich finde dieses $cleanWord wirklich interessant.',
+        transliteration: '[Ikh fin-de dee-zes $cleanWord virk-likh in-te-re-sant]',
+        englishTranslation: 'I find this $labelEn really interesting.',
       ),
       ExampleSentence(
-        styleLabel: 'Alltagsgespräch (Daily)',
-        nativeSentence: 'Ich habe das $cleanWord heute gesehen.',
-        transliteration: '[Ikh ha-be das $cleanWord hoy-te ge-ze-hen]',
-        englishTranslation: 'I saw the $labelEn today.',
+        styleLabel: 'Praktischer Satz',
+        nativeSentence: 'Hier ist dein $cleanWord.',
+        transliteration: '[Heer ist dayn $cleanWord]',
+        englishTranslation: 'Here is your $labelEn.',
       ),
     ];
   }
@@ -168,16 +168,16 @@ class SentenceGeneratorService {
     final pinyin = (translit != null && translit.isNotEmpty) ? translit : word;
     return [
       ExampleSentence(
-        styleLabel: '基础句型 (Beginner)',
+        styleLabel: '日常对话 (Conversation)',
         nativeSentence: '这是一个很好的$word。',
         transliteration: 'Zhè shì yí gè hěn hǎo de $pinyin.',
         englishTranslation: 'This is a very good $labelEn.',
       ),
       ExampleSentence(
-        styleLabel: '日常对话 (Conversation)',
-        nativeSentence: '桌子上有一个$word。',
-        transliteration: 'Zhuōzi shàng yǒu yí gè $pinyin.',
-        englishTranslation: 'There is a $labelEn on the table.',
+        styleLabel: '常用句型 (Everyday)',
+        nativeSentence: '我很喜欢这个$word。',
+        transliteration: 'Wǒ hěn xǐhuan zhè ge $pinyin.',
+        englishTranslation: 'I really like this $labelEn.',
       ),
     ];
   }

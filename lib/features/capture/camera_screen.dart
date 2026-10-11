@@ -10,15 +10,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:flutter_brands/flutter_brands.dart';
 import '../../app/providers.dart';
-import '../../core/ai/ai_settings_provider.dart';
-import '../../core/constants/ai_providers.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/theme/memoria_tokens.dart';
 import '../../core/widgets/language_flag_icon.dart';
 import 'language_picker_sheet.dart';
-import 'widgets/ai_settings_sheet.dart';
 
 class CameraScreen extends ConsumerStatefulWidget {
   const CameraScreen({super.key});
@@ -420,25 +416,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
     HapticFeedback.selectionClick();
   }
 
-  void _showAiSettingsSheet() {
-    HapticFeedback.selectionClick();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const AiSettingsSheet(),
-    );
-  }
-
-  void _toggleAiMode() {
-    final current = ref.read(aiEngineModeProvider);
-    final next = current == AiEngineMode.cloud
-        ? AiEngineMode.local
-        : AiEngineMode.cloud;
-    ref.read(aiEngineModeProvider.notifier).setMode(next);
-    HapticFeedback.selectionClick();
-  }
-
   Widget _buildUnstretchedCameraPreview(BuildContext context) {
     final controller = _cameraController;
     if (controller == null || !controller.value.isInitialized) {
@@ -493,8 +470,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
     final activeLanguage = ref.watch(activeLanguageProvider);
     final format = ref.watch(selectedPolaroidFormatProvider);
     final flashMode = ref.watch(cameraFlashModeProvider);
-    final aiEngineMode = ref.watch(aiEngineModeProvider);
-    final selectedCloud = ref.watch(selectedCloudProviderProvider);
     final polaroidsAsync = ref.watch(polaroidsProvider);
 
     ref.listen<FlashMode>(cameraFlashModeProvider, (previous, next) async {
@@ -643,44 +618,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                       ),
 
                       const SizedBox(width: 8),
-
-                      // AI Engine & Model Settings
-                      GestureDetector(
-                        onTap: _showAiSettingsSheet,
-                        onLongPress: _toggleAiMode,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: aiEngineMode == AiEngineMode.local
-                                ? const Icon(
-                                    LucideIcons.cpu,
-                                    size: 22,
-                                    color: Color(0xFFFFB597),
-                                  )
-                                : Container(
-                                    width: 26,
-                                    height: 26,
-                                    padding: const EdgeInsets.all(3.5),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Center(
-                                      child: BrandIcon(
-                                        selectedCloud.brandIcon,
-                                        width: 17,
-                                        height: 17,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
 
                       // Language Selector
                       GestureDetector(
@@ -836,47 +773,103 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Film Roll Counter & Gallery Preview Thumbnail
+                      // Film Roll Counter & Authentic Mini Polaroid Thumbnail
                       GestureDetector(
                         onTap: () {
-                          ref.read(navigationIndexProvider.notifier).state = 1;
+                          HapticFeedback.selectionClick();
+                          ref.read(navigationIndexProvider.notifier).state = 2;
                         },
                         child: Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            Container(
-                              width: sideButtonSize,
-                              height: sideButtonSize,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(MemoriaTokens.radiusSm),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
-                                color: Colors.black45,
+                            Transform.rotate(
+                              angle: -0.04,
+                              child: Container(
+                                width: sideButtonSize - 2,
+                                height: (sideButtonSize - 2) * 1.22,
+                                padding: EdgeInsets.fromLTRB(
+                                  isCompactHeight ? 2.5 : 3.0,
+                                  isCompactHeight ? 2.5 : 3.0,
+                                  isCompactHeight ? 2.5 : 3.0,
+                                  isCompactHeight ? 7.0 : 8.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: MemoriaTokens.polaroidCard,
+                                  borderRadius: BorderRadius.circular(3.0),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1.0,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x40000000),
+                                      blurRadius: 6,
+                                      offset: Offset(0, 3),
+                                    ),
+                                    BoxShadow(
+                                      color: Color(0x1F000000),
+                                      blurRadius: 2,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black12,
+                                    borderRadius: BorderRadius.circular(1.5),
+                                    border: Border.all(
+                                      color: Colors.black.withValues(alpha: 0.12),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: latestPolaroid != null &&
+                                          File(latestPolaroid.imagePath).existsSync()
+                                      ? Image.file(
+                                          File(latestPolaroid.imagePath),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Center(
+                                          child: Icon(
+                                            LucideIcons.images,
+                                            color: MemoriaTokens.onSurfaceVariant.withValues(alpha: 0.5),
+                                            size: isCompactHeight ? 14 : 16,
+                                          ),
+                                        ),
+                                ),
                               ),
-                              clipBehavior: Clip.antiAlias,
-                              child: latestPolaroid != null && File(latestPolaroid.imagePath).existsSync()
-                                  ? Image.file(
-                                      File(latestPolaroid.imagePath),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Icon(LucideIcons.images, color: Colors.white70, size: isCompactHeight ? 20 : 22),
                             ),
                             if (totalCount > 0)
                               Positioned(
-                                top: -6,
-                                right: -6,
+                                top: -5,
+                                right: -5,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: MemoriaTokens.primary,
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: Colors.black, width: 1.5),
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 1.2,
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x33000000),
+                                        blurRadius: 3,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
                                   ),
                                   child: Text(
                                     '$totalCount',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 10,
+                                      fontSize: 9.5,
                                       fontWeight: FontWeight.bold,
+                                      height: 1.0,
                                     ),
                                   ),
                                 ),
