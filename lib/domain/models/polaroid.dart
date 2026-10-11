@@ -1,6 +1,7 @@
 import '../../core/languages/chin_format_helper.dart';
 import '../../data/services/local_object_lexicon.dart';
 import 'detected_object.dart';
+import 'polaroid_format.dart';
 
 class Polaroid {
   final String id;
@@ -209,4 +210,7 @@ class Polaroid {
 
   /// Line 2 for Polaroid chin: e.g. "(neko)" or "(aklat · [ak-lat])"
   String get chinLine2 => chinText.line2;
+
+  /// Dynamic aspect ratio format that the polaroid was shot on
+  PolaroidFormat get format => PolaroidFormat.fromId(layoutId);
 }

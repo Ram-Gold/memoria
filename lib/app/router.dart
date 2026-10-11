@@ -17,8 +17,20 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/develop',
       builder: (context, state) {
-        final imagePath = state.extra as String? ?? '';
-        return DevelopScreen(imagePath: imagePath);
+        final String imagePath;
+        final String? layoutId;
+        if (state.extra is Map<String, dynamic>) {
+          final map = state.extra as Map<String, dynamic>;
+          imagePath = map['imagePath'] as String? ?? '';
+          layoutId = map['layoutId'] as String?;
+        } else {
+          imagePath = state.extra as String? ?? '';
+          layoutId = null;
+        }
+        return DevelopScreen(
+          imagePath: imagePath,
+          layoutId: layoutId,
+        );
       },
     ),
     GoRoute(
@@ -26,6 +38,7 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>? ?? {};
         final imagePath = extra['imagePath'] as String? ?? '';
+        final layoutId = extra['layoutId'] as String?;
         final analysisResult = extra['analysisResult'] as AnalysisResult? ??
             const AnalysisResult(
               sessionId: 'empty',
@@ -37,6 +50,7 @@ final appRouter = GoRouter(
         return EditorScreen(
           imagePath: imagePath,
           analysisResult: analysisResult,
+          layoutId: layoutId,
         );
       },
     ),

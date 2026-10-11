@@ -14,56 +14,14 @@ import '../data/services/mistral_vision_service.dart';
 import '../data/services/openai_vision_service.dart';
 import '../domain/models/detected_object.dart';
 import '../domain/models/polaroid.dart';
+import '../domain/models/polaroid_format.dart';
 import '../domain/services/vision_service.dart';
+
+export '../domain/models/polaroid_format.dart';
 
 final navigationIndexProvider = StateProvider<int>((ref) => 0);
 final cameraFlashModeProvider = StateProvider<FlashMode>((ref) => FlashMode.auto);
 final cameraAspectRatioProvider = StateProvider<String>((ref) => '1:1');
-
-enum PolaroidFormat {
-  square(
-    id: '1:1',
-    ratio: 1.0,
-    displayName: '1:1 Square',
-    filmType: 'Polaroid 600',
-    dimensions: '88 × 107 mm',
-  ),
-  portrait(
-    id: '3:4',
-    ratio: 3 / 4,
-    displayName: '3:4 Portrait',
-    filmType: 'Polaroid Go',
-    dimensions: '54 × 67 mm',
-  ),
-  landscape(
-    id: '4:3',
-    ratio: 4 / 3,
-    displayName: '4:3 Wide',
-    filmType: 'Polaroid Wide',
-    dimensions: '108 × 86 mm',
-  );
-
-  final String id;
-  final double ratio;
-  final String displayName;
-  final String filmType;
-  final String dimensions;
-
-  const PolaroidFormat({
-    required this.id,
-    required this.ratio,
-    required this.displayName,
-    required this.filmType,
-    required this.dimensions,
-  });
-
-  static PolaroidFormat fromId(String id) {
-    return PolaroidFormat.values.firstWhere(
-      (f) => f.id == id,
-      orElse: () => PolaroidFormat.square,
-    );
-  }
-}
 
 final selectedPolaroidFormatProvider = Provider<PolaroidFormat>((ref) {
   final ratioId = ref.watch(cameraAspectRatioProvider);

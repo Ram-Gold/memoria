@@ -540,7 +540,7 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
                           children: [
                             // Photographic Aperture Window
                             AspectRatio(
-                              aspectRatio: 1.0,
+                              aspectRatio: p.format.ratio,
                               child: Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(2),

@@ -466,7 +466,7 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                                 width: 146,
                                 child: PolaroidFrame(
                                   imagePath: p.imagePath,
-                                  format: PolaroidFormat.square,
+                                  format: p.format,
                                   primaryText: p.chinLine1,
                                   subtitleText: p.chinLine2,
                                   showWashiTape: true,

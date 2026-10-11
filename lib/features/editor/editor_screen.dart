@@ -22,11 +22,13 @@ import '../../domain/models/polaroid.dart';
 class EditorScreen extends ConsumerStatefulWidget {
   final String imagePath;
   final AnalysisResult analysisResult;
+  final String? layoutId;
 
   const EditorScreen({
     super.key,
     required this.imagePath,
     required this.analysisResult,
+    this.layoutId,
   });
 
   @override
@@ -125,6 +127,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         }
       }
 
+      final activeFormat = widget.layoutId != null
+          ? PolaroidFormat.fromId(widget.layoutId!)
+          : ref.read(selectedPolaroidFormatProvider);
+
       final polaroid = Polaroid(
         id: polId,
         imagePath: widget.imagePath,
@@ -137,6 +143,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         transliteration: resolvedSelectedObject.transliteration,
         partOfSpeech: resolvedSelectedObject.partOfSpeech,
         difficultyLevel: resolvedSelectedObject.difficultyLevel,
+        layoutId: activeFormat.id,
         createdAt: DateTime.now(),
         detectedObjects: objectsToSave,
         isFavorite: _isFavorite,
@@ -186,7 +193,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   Widget build(BuildContext context) {
     final language = ref.watch(activeLanguageProvider);
     final isFilipino = language.code == 'fil';
-    final format = ref.watch(selectedPolaroidFormatProvider);
+    final format = widget.layoutId != null
+        ? PolaroidFormat.fromId(widget.layoutId!)
+        : ref.watch(selectedPolaroidFormatProvider);
     final threshold = ref.watch(confidenceThresholdProvider);
     final confidentObjects = widget.analysisResult.detectedObjects
         .where((o) => o.isConfident(threshold))

@@ -349,7 +349,14 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
 
       if (mounted) {
         // Hand off seamlessly to the develop screen with zero UI hitch
-        final pushFuture = context.push('/develop', extra: imagePath);
+        final shotFormat = ref.read(selectedPolaroidFormatProvider);
+        final pushFuture = context.push(
+          '/develop',
+          extra: {
+            'imagePath': imagePath,
+            'layoutId': shotFormat.id,
+          },
+        );
 
         // Instant Clean Reset behind the transition:
         // As soon as the develop screen covers the camera, reset so camera is instantly fresh on return

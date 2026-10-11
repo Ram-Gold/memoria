@@ -16,8 +16,13 @@ import '../../domain/models/analysis_result.dart';
 /// and develops as the user shakes the device physically or agitates via touch.
 class DevelopScreen extends ConsumerStatefulWidget {
   final String imagePath;
+  final String? layoutId;
 
-  const DevelopScreen({super.key, required this.imagePath});
+  const DevelopScreen({
+    super.key,
+    required this.imagePath,
+    this.layoutId,
+  });
 
   @override
   ConsumerState<DevelopScreen> createState() => _DevelopScreenState();
@@ -165,11 +170,13 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen>
       // Brief ~600ms pause so the user admires the developed photograph before transition
       Future.delayed(const Duration(milliseconds: 650), () {
         if (mounted) {
+          final resolvedLayoutId = widget.layoutId ?? ref.read(selectedPolaroidFormatProvider).id;
           context.pushReplacement(
             '/editor',
             extra: {
               'imagePath': widget.imagePath,
               'analysisResult': _aiResult,
+              'layoutId': resolvedLayoutId,
             },
           );
         }
@@ -187,7 +194,9 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen>
 
   @override
   Widget build(BuildContext context) {
-    final format = ref.watch(selectedPolaroidFormatProvider);
+    final format = widget.layoutId != null
+        ? PolaroidFormat.fromId(widget.layoutId!)
+        : ref.watch(selectedPolaroidFormatProvider);
 
     return Scaffold(
       backgroundColor: MemoriaTokens.surfaceContainerLow,
