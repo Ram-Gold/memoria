@@ -57,7 +57,6 @@ dependencies:
   url_launcher: ^6.3.3
   file_picker: ^13.1.0
   flutter_gemma: ^1.11.4
-  flutter_grab: ^0.2.0
 
 dev_dependencies:
   flutter_test:

@@ -11,7 +11,6 @@ import flutter_gemma
 import flutter_tts
 import gal
 import large_file_handler
-import pasteboard
 import pdfium_flutter
 import share_plus
 import shared_preferences_foundation
@@ -25,7 +24,6 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FlutterTtsPlugin.register(with: registry.registrar(forPlugin: "FlutterTtsPlugin"))
   GalPlugin.register(with: registry.registrar(forPlugin: "GalPlugin"))
   LargeFileHandlerPlugin.register(with: registry.registrar(forPlugin: "LargeFileHandlerPlugin"))
-  PasteboardPlugin.register(with: registry.registrar(forPlugin: "PasteboardPlugin"))
   PDFiumFlutterPlugin.register(with: registry.registrar(forPlugin: "PDFiumFlutterPlugin"))
   SharePlusMacosPlugin.register(with: registry.registrar(forPlugin: "SharePlusMacosPlugin"))
   SharedPreferencesPlugin.register(with: registry.registrar(forPlugin: "SharedPreferencesPlugin"))
