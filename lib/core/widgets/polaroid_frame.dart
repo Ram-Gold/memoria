@@ -134,7 +134,11 @@ class PolaroidFrame extends StatelessWidget {
                             builder: (context) {
                               final isBaybayin = BaybayinEngine.hasBaybayinGlyphs(primaryText!);
                               final baseSize = chinHeight > 60 ? 28.0 : (chinHeight < 45 ? 15.0 : 20.0);
-                              final calculatedSize = primaryFontSize ?? (isBaybayin ? baseSize + 2.0 : baseSize);
+                              final scaleDiscount = primaryText!.length > 18
+                                  ? 0.76
+                                  : (primaryText!.length > 12 ? 0.86 : 1.0);
+                              final calculatedSize = primaryFontSize ??
+                                  ((isBaybayin ? baseSize + 2.0 : baseSize) * scaleDiscount);
 
                               return Text(
                                 primaryText!,

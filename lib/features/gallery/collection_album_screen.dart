@@ -345,8 +345,8 @@ class _CollectionAlbumScreenState extends ConsumerState<CollectionAlbumScreen> {
                                 child: PolaroidFrame(
                                   imagePath: p.imagePath,
                                   format: PolaroidFormat.square,
-                                  primaryText: p.selectedWord,
-                                  subtitleText: p.transliteration ?? p.secondaryScript,
+                                  primaryText: p.chinLine1,
+                                  subtitleText: p.chinLine2,
                                   showWashiTape: true,
                                   isStamped: p.isFavorite,
                                   angle: tilt,

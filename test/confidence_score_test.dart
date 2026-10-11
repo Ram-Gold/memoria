@@ -237,8 +237,8 @@ void main() {
       // Verify that the Switch Taught Object section is rendered
       expect(find.text('Switch Taught Object in Scene:'), findsOneWidget);
 
-      // Confident objects MUST be visible
-      expect(find.text('珈琲碗 (Coffee Mug)'), findsOneWidget);
+      // Confident objects MUST be visible (chin Line 1 + switch list item)
+      expect(find.text('珈琲碗 (Coffee Mug)'), findsNWidgets(2));
       expect(find.text('本 (Open Book)'), findsOneWidget);
       expect(find.text('95% confident'), findsOneWidget);
       expect(find.text('85% confident'), findsOneWidget);
@@ -295,8 +295,8 @@ void main() {
       // Verify header is present
       expect(find.text('All Objects in this Memory:'), findsOneWidget);
 
-      // Confident object is shown
-      expect(find.text('珈琲碗 (Coffee Mug)'), findsOneWidget);
+      // Confident object is shown (chin Line 1 + list item)
+      expect(find.text('珈琲碗 (Coffee Mug)'), findsNWidgets(2));
       expect(find.text('95% match'), findsOneWidget);
 
       // Object that does NOT reach the threshold does NOT appear!

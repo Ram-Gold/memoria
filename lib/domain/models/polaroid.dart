@@ -1,3 +1,4 @@
+import '../../core/languages/chin_format_helper.dart';
 import '../../data/services/local_object_lexicon.dart';
 import 'detected_object.dart';
 
@@ -193,4 +194,19 @@ class Polaroid {
     // 8. Safe ultimate fallback (never "Language learning artifact")
     return selectedWord.isNotEmpty ? selectedWord : 'Item';
   }
+
+  /// Formatted chin text (Line 1: Native (Meaning), Line 2: (Pronunciation))
+  ChinText get chinText => ChinFormatHelper.format(
+        targetWord: selectedWord,
+        secondaryScript: secondaryScript,
+        transliteration: transliteration,
+        labelEn: resolvedEnglishLabel,
+        languageCode: languageCode,
+      );
+
+  /// Line 1 for Polaroid chin: e.g. "猫 (Cat)" or "ᜀᜃ᜔ᜎᜆ᜔ (Book)"
+  String get chinLine1 => chinText.line1;
+
+  /// Line 2 for Polaroid chin: e.g. "(neko)" or "(aklat · [ak-lat])"
+  String get chinLine2 => chinText.line2;
 }

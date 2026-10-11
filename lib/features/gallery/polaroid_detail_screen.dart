@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../app/providers.dart';
 import '../../core/ai/ai_settings_provider.dart';
+import '../../core/languages/chin_format_helper.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/languages/sentence_generator.dart';
 import '../../core/services/app_tts_service.dart';
@@ -461,6 +462,17 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
       activeEnglishLabel = p.resolvedEnglishLabel;
     }
 
+    // Format standardized Polaroid chin text
+    final chinText = ChinFormatHelper.format(
+      targetWord: activeWord,
+      secondaryScript: activeSecondary,
+      transliteration: activeTranslit,
+      labelEn: activeEnglishLabel,
+      languageCode: p.languageCode,
+    );
+    final detailLine1 = chinText.line1;
+    final detailLine2 = chinText.line2;
+
     // Format date string
     final date = p.createdAt.toLocal();
     final months = [
@@ -560,19 +572,22 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        activeWord,
+                                        detailLine1,
                                         textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: MemoriaTokens.handwrittenChin(
-                                          fontSize: 32,
+                                          fontSize: detailLine1.length > 18 ? 22 : (detailLine1.length > 12 ? 26 : 30),
                                           color: MemoriaTokens.onSurface,
                                         ),
                                       ),
-                                      if (activeSecondary.isNotEmpty || activeTranslit.isNotEmpty) ...[
+                                      if (detailLine2.isNotEmpty) ...[
                                         const SizedBox(height: 2),
                                         Text(
-                                          activeSecondary.isNotEmpty
-                                              ? '$activeSecondary · $activeTranslit'
-                                              : activeTranslit,
+                                          detailLine2,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                           style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
                                         ),
                                       ],

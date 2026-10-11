@@ -56,12 +56,14 @@ class LanguageRegistry {
     chinLayout: ChinLayoutStrategy.kanjiFirst,
     promptInstructions:
         'Target Language: Japanese. '
+        'Pipeline: English -> Translate -> Japanese. '
         'For each detected object: '
-        'target_word must be the standard Japanese writing (kanji/kana, e.g. 本, 猫, コップ). '
-        'secondary_script must be the full hiragana reading (e.g. ほん, ねこ, こっぷ). '
-        'transliteration must be Hepburn romaji (e.g. hon, neko, koppu). '
-        'difficulty_level must be JLPT N5 to N1 (favor N5/N4 for common everyday items). '
-        'Always pick the most common everyday beginner word, not rare synonyms.',
+        '1. label_en: concise English name of the object (e.g. "Cat", "Coffee Cup", "Book"). '
+        '2. target_word: standard Japanese writing (kanji/kana, e.g. "猫", "コップ", "本"). '
+        '3. secondary_script: full hiragana reading (e.g. "ねこ", "こっぷ", "ほん"). '
+        '4. transliteration: clean Hepburn romaji pronunciation (e.g. "neko", "koppu", "hon"). '
+        '5. difficulty_level: JLPT level (N5 to N1, favor N5/N4 for common everyday items). '
+        'Always pick the most common everyday beginner word, avoiding rare or archaic terms.',
     ttsLocale: 'ja-JP',
   );
 
@@ -77,11 +79,13 @@ class LanguageRegistry {
     chinLayout: ChinLayoutStrategy.baybayinFirst,
     promptInstructions:
         'Target Language: Filipino / Tagalog. '
+        'Pipeline: English -> Translate -> Tagalog -> Transcribe -> Baybayin. '
         'For each detected object: '
-        'target_word must be the authentic Baybayin Unicode script characters (Unicode range U+1700 to U+171F, e.g. ᜀᜃᜎᜆ᜔ for aklat, ᜉᜓᜐ for pusa, ᜋᜒᜐ for mesa). '
-        'secondary_script must be the modern Latin Tagalog word (e.g. aklat, pusa, mesa). '
-        'transliteration must be phonetic pronunciation guide with hyphenated syllables (e.g. [ak-lat], [pu-sa], [me-sa]). '
-        'difficulty_level must be CEFR A1 to B2 (favor A1/A2 for common items). '
+        '1. label_en: concise English name of the object (e.g. "Book", "Cat", "Table"). '
+        '2. secondary_script: common modern everyday Latin Tagalog word (e.g. "aklat", "pusa", "mesa"). '
+        '3. target_word: authentic Baybayin Unicode characters (Unicode U+1700 to U+171F, with modern virama ᜔ for final consonants, e.g. "ᜀᜃ᜔ᜎᜆ᜔", "ᜉᜓᜐ", "ᜋᜒᜐ"). '
+        '4. transliteration: phonetic pronunciation guide with hyphenated syllables in brackets (e.g. "[ak-lat]", "[pu-sa]", "[me-sa]"). '
+        '5. difficulty_level: CEFR level (A1 to B2, favor A1/A2 for common items). '
         'Always pick the most common everyday beginner word.',
     ttsLocale: 'fil-PH',
   );
@@ -135,7 +139,15 @@ class LanguageRegistry {
     primaryFontFamily: 'Noto Sans SC',
     chinLayout: ChinLayoutStrategy.kanjiFirst,
     promptInstructions:
-        'Target Language: Mandarin Chinese (Simplified). target_word is Hanzi characters. secondary_script is Pinyin with tonal markers. transliteration is pronunciation guide.',
+        'Target Language: Mandarin Chinese (Simplified). '
+        'Pipeline: English -> Translate -> Chinese. '
+        'For each detected object: '
+        '1. label_en: concise English name of the object (e.g. "Book", "Cat", "Cup"). '
+        '2. target_word: standard Simplified Hanzi characters (e.g. "书", "猫", "杯子"). '
+        '3. secondary_script: standard Simplified Hanzi characters. '
+        '4. transliteration: clean Pinyin pronunciation with tone marks (e.g. "shū", "māo", "bēizi"). '
+        '5. difficulty_level: HSK level (HSK 1 to 4, favor HSK 1/2 for common everyday items). '
+        'Always pick the most common everyday beginner word.',
     ttsLocale: 'zh-CN',
   );
 

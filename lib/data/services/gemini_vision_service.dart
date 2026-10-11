@@ -93,9 +93,10 @@ CRITICAL INVARIANTS:
 1. Identify 1 to 5 prominent tangible physical objects in the image. Reject human identity / faces (no PII).
 2. Select exactly ONE primary focal object ('primary_object_id') that best represents the photograph's main subject.
 3. For each object, assign a confidence score between 0.0 and 1.0 (e.g. 0.95 for clearly recognized objects).
-4. Keep labels concise (1-2 words).
-5. Pedagogical Rule: Always choose the most common beginner-friendly everyday word (e.g. A1 / N5 level). For example in Japanese, prefer マグカップ or コップ rather than archaic 珈琲碗. In Filipino, prefer common terms (e.g. aklat, mesa, baso).
-6. ${language.promptInstructions}
+4. 'label_en' must be the concise, natural English object label (1-2 words, e.g. "Book", "Coffee Cup", "Cat").
+5. Follow the specific translation & transcription pipeline:
+   ${language.promptInstructions}
+6. Pedagogical Rule: Always choose the most common beginner-friendly everyday word (e.g. A1 / N5 level). For example in Japanese, prefer マグカップ or コップ rather than archaic 珈琲碗. In Filipino, prefer common terms (e.g. aklat, mesa, baso).
 7. Provide a concise scene_description (max 80 chars).
 8. Normalized bounding box coordinates must follow [ymin, xmin, ymax, xmax] on a scale of 0 to 1000 representing each object's exact location.
 ''';
@@ -186,7 +187,7 @@ CRITICAL INVARIANTS:
       var result = AnalysisResult.fromJson(parsedJson);
 
       // Post-processing hybrid validation for Filipino Baybayin
-      if (language.code == 'fil') {
+      if (language.code == 'fil' || language.code == 'tl') {
         final verifiedObjects = result.detectedObjects.map((obj) {
           final dictEntry = TagalogDictionaryService.instance.lookupByEnglish(obj.labelEn);
           final tagalogWord = dictEntry?.word ??
@@ -194,10 +195,13 @@ CRITICAL INVARIANTS:
                   ? obj.secondaryScript!.trim().toLowerCase()
                   : obj.labelEn.trim().toLowerCase());
 
-          final baybayin = BaybayinEngine.transliterate(tagalogWord);
-          final pronunciation = (obj.transliteration != null && obj.transliteration!.startsWith('['))
-              ? obj.transliteration!
-              : BaybayinEngine.formatPronunciation(tagalogWord);
+          final normalized = BaybayinEngine.normalizeTagalogPhonetics(tagalogWord);
+          final baybayin = dictEntry?.baybayin ?? BaybayinEngine.transliterate(normalized);
+          final pronunciation = (dictEntry != null && dictEntry.pronunciation.isNotEmpty)
+              ? dictEntry.pronunciation
+              : ((obj.transliteration != null && obj.transliteration!.startsWith('['))
+                  ? obj.transliteration!
+                  : BaybayinEngine.formatPronunciation(tagalogWord));
 
           return obj.copyWith(
             targetWord: baybayin,

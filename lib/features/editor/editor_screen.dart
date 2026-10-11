@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../app/providers.dart';
+import '../../core/languages/chin_format_helper.dart';
 import '../../core/services/app_tts_service.dart';
 import '../../core/theme/memoria_tokens.dart';
 import '../../core/widgets/rubber_stamp.dart';
@@ -183,7 +184,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final language = ref.read(activeLanguageProvider);
+    final language = ref.watch(activeLanguageProvider);
     final isFilipino = language.code == 'fil';
     final format = ref.watch(selectedPolaroidFormatProvider);
     final threshold = ref.watch(confidenceThresholdProvider);
@@ -191,13 +192,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         .where((o) => o.isConfident(threshold))
         .toList();
 
-    final line1 = _invertScriptOrder
-        ? (_selectedObject.secondaryScript ?? _selectedObject.targetWord)
-        : _selectedObject.targetWord;
-
-    final line2 = _invertScriptOrder
-        ? _selectedObject.targetWord
-        : (_selectedObject.secondaryScript ?? '');
+    final chinText = ChinFormatHelper.formatFromObject(_selectedObject, language.code);
+    final line1 = chinText.line1;
+    final line2 = chinText.line2;
 
     return Scaffold(
       backgroundColor: MemoriaTokens.surface,
@@ -375,17 +372,20 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                                     Text(
                                       line1,
                                       textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: MemoriaTokens.handwrittenChin(
-                                        fontSize: 32,
+                                        fontSize: line1.length > 18 ? 22 : (line1.length > 12 ? 26 : 30),
                                         color: MemoriaTokens.onSurface,
                                       ),
                                     ),
-                                    if (line2.isNotEmpty || _selectedObject.transliteration != null) ...[
+                                    if (line2.isNotEmpty) ...[
                                       const SizedBox(height: 2),
                                       Text(
-                                        line2.isNotEmpty
-                                            ? '$line2 ${_selectedObject.transliteration != null ? "· ${_selectedObject.transliteration}" : ""}'
-                                            : _selectedObject.transliteration ?? '',
+                                        line2,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
                                       ),
                                     ],
