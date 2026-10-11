@@ -121,12 +121,25 @@ abstract class MemoriaTokens {
         color: color,
       );
 
-  static TextStyle headlineSm({Color color = onSurface}) =>
+  static const List<String> scriptFontFallbacks = [
+    'Baybayin Sisil',
+    'Noto Sans Tagalog',
+    'Noto Sans JP',
+    'Noto Sans SC',
+    'sans-serif',
+  ];
+
+  static TextStyle headlineSm({
+    Color color = onSurface,
+    List<String> fontFamilyFallback = scriptFontFallbacks,
+  }) =>
       GoogleFonts.plusJakartaSans(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         height: 1.3,
         color: color,
+      ).copyWith(
+        fontFamilyFallback: fontFamilyFallback,
       );
 
   static TextStyle bodyLg({Color color = onSurface}) =>
@@ -153,12 +166,17 @@ abstract class MemoriaTokens {
         color: color,
       );
 
-  static TextStyle labelLg({Color color = onSurface}) =>
+  static TextStyle labelLg({
+    Color color = onSurface,
+    List<String> fontFamilyFallback = scriptFontFallbacks,
+  }) =>
       GoogleFonts.plusJakartaSans(
         fontSize: 13,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.02,
         color: color,
+      ).copyWith(
+        fontFamilyFallback: fontFamilyFallback,
       );
 
   static TextStyle labelMd({Color color = onSurfaceVariant}) =>

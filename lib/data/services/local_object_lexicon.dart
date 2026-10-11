@@ -157,13 +157,59 @@ class LocalObjectLexicon {
     'bird': 'bird',
     'tree': 'tree',
 
-    // Foods
+    // Foods & Dining
     'apple': 'apple',
     'banana': 'banana',
     'orange': 'orange',
     'citrus': 'orange',
     'pizza': 'pizza',
     'cake': 'cake',
+    'food': 'food',
+    'fast food': 'food',
+    'meal': 'food',
+    'cuisine': 'food',
+    'dairy product': 'food',
+    'chicken': 'chicken',
+    'poultry': 'chicken',
+    'fried chicken': 'chicken',
+    'chicken meat': 'chicken',
+    'ice cream': 'ice cream',
+    'icecream': 'ice cream',
+    'ice-cream': 'ice cream',
+    'frozen dessert': 'ice cream',
+    'gelato': 'ice cream',
+    'sorbet': 'ice cream',
+    'dessert': 'dessert',
+    'sweets': 'dessert',
+    'sweetness': 'dessert',
+    'snack': 'snack',
+    'candy': 'snack',
+    'meat': 'meat',
+    'beef': 'meat',
+    'pork': 'meat',
+    'rice': 'rice',
+    'fried rice': 'rice',
+    'noodle': 'noodles',
+    'noodles': 'noodles',
+    'ramen': 'noodles',
+    'pasta': 'noodles',
+    'spaghetti': 'noodles',
+    'soup': 'soup',
+    'broth': 'soup',
+    'bread': 'bread',
+    'toast': 'bread',
+    'bun': 'bread',
+    'sandwich': 'bread',
+    'hamburger': 'burger',
+    'burger': 'burger',
+    'salad': 'salad',
+    'fish': 'fish',
+    'seafood': 'fish',
+    'egg': 'egg',
+    'eggs': 'egg',
+    'fruit': 'fruit',
+    'vegetable': 'vegetable',
+    'milk': 'milk',
 
     // Travel & Urban
     'bicycle': 'bicycle',
@@ -227,6 +273,23 @@ class LocalObjectLexicon {
       case 'orange':
       case 'pizza':
       case 'cake':
+      case 'food':
+      case 'chicken':
+      case 'ice cream':
+      case 'dessert':
+      case 'snack':
+      case 'meat':
+      case 'rice':
+      case 'noodles':
+      case 'bread':
+      case 'soup':
+      case 'salad':
+      case 'fish':
+      case 'egg':
+      case 'burger':
+      case 'fruit':
+      case 'vegetable':
+      case 'milk':
       case 'clock':
       case 'trash can':
       case 'bucket':
@@ -632,6 +695,142 @@ class LocalObjectLexicon {
       partOfSpeech: 'Noun',
       difficultyLevel: 'N5',
     ),
+    'food': const LexiconEntry(
+      labelEn: 'Food',
+      targetWord: '食べ物',
+      secondaryScript: 'たべもの',
+      transliteration: 'tabemono',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'chicken': const LexiconEntry(
+      labelEn: 'Chicken',
+      targetWord: '鶏肉',
+      secondaryScript: 'とりにく',
+      transliteration: 'toriniku',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'ice cream': const LexiconEntry(
+      labelEn: 'Ice Cream',
+      targetWord: 'アイスクリーム',
+      secondaryScript: 'あいすくりーむ',
+      transliteration: 'aisukuriimu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'dessert': const LexiconEntry(
+      labelEn: 'Dessert',
+      targetWord: 'デザート',
+      secondaryScript: 'でざーと',
+      transliteration: 'dezaato',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'snack': const LexiconEntry(
+      labelEn: 'Snack',
+      targetWord: 'おやつ',
+      secondaryScript: 'おやつ',
+      transliteration: 'oyatsu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'meat': const LexiconEntry(
+      labelEn: 'Meat',
+      targetWord: '肉',
+      secondaryScript: 'にく',
+      transliteration: 'niku',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'rice': const LexiconEntry(
+      labelEn: 'Rice',
+      targetWord: 'ご飯',
+      secondaryScript: 'ごはん',
+      transliteration: 'gohan',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'noodles': const LexiconEntry(
+      labelEn: 'Noodles',
+      targetWord: '麺',
+      secondaryScript: 'めん',
+      transliteration: 'men',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'bread': const LexiconEntry(
+      labelEn: 'Bread',
+      targetWord: 'パン',
+      secondaryScript: 'ぱん',
+      transliteration: 'pan',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'soup': const LexiconEntry(
+      labelEn: 'Soup',
+      targetWord: 'スープ',
+      secondaryScript: 'すーぷ',
+      transliteration: 'suupu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'salad': const LexiconEntry(
+      labelEn: 'Salad',
+      targetWord: 'サラダ',
+      secondaryScript: 'さらだ',
+      transliteration: 'sarada',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'fish': const LexiconEntry(
+      labelEn: 'Fish',
+      targetWord: '魚',
+      secondaryScript: 'さかな',
+      transliteration: 'sakana',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'egg': const LexiconEntry(
+      labelEn: 'Egg',
+      targetWord: '卵',
+      secondaryScript: 'たまご',
+      transliteration: 'tamago',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'burger': const LexiconEntry(
+      labelEn: 'Burger',
+      targetWord: 'ハンバーガー',
+      secondaryScript: 'はんばーがー',
+      transliteration: 'hanbaagaa',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'fruit': const LexiconEntry(
+      labelEn: 'Fruit',
+      targetWord: '果物',
+      secondaryScript: 'くだもの',
+      transliteration: 'kudamono',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'vegetable': const LexiconEntry(
+      labelEn: 'Vegetable',
+      targetWord: '野菜',
+      secondaryScript: 'やさい',
+      transliteration: 'yasai',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
+    'milk': const LexiconEntry(
+      labelEn: 'Milk',
+      targetWord: '牛乳',
+      secondaryScript: 'ぎゅうにゅう',
+      transliteration: 'gyuunyuu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'N5',
+    ),
 
     // Human & Body Parts
     'hand': const LexiconEntry(
@@ -1016,6 +1215,142 @@ class LocalObjectLexicon {
       partOfSpeech: 'Noun',
       difficultyLevel: 'A1',
     ),
+    'food': LexiconEntry(
+      labelEn: 'Food',
+      targetWord: BaybayinEngine.transliterate('pagkain'),
+      secondaryScript: 'pagkain',
+      transliteration: '[pag-ka-in]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'chicken': LexiconEntry(
+      labelEn: 'Chicken',
+      targetWord: BaybayinEngine.transliterate('manok'),
+      secondaryScript: 'manok',
+      transliteration: '[ma-nok]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'ice cream': LexiconEntry(
+      labelEn: 'Ice Cream',
+      targetWord: BaybayinEngine.transliterate('sorbetes'),
+      secondaryScript: 'sorbetes',
+      transliteration: '[sor-be-tes]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'dessert': LexiconEntry(
+      labelEn: 'Dessert',
+      targetWord: BaybayinEngine.transliterate('himagas'),
+      secondaryScript: 'himagas',
+      transliteration: '[hi-ma-gas]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'snack': LexiconEntry(
+      labelEn: 'Snack',
+      targetWord: BaybayinEngine.transliterate('meryenda'),
+      secondaryScript: 'meryenda',
+      transliteration: '[mer-yen-da]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'meat': LexiconEntry(
+      labelEn: 'Meat',
+      targetWord: BaybayinEngine.transliterate('karne'),
+      secondaryScript: 'karne',
+      transliteration: '[kar-ne]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'rice': LexiconEntry(
+      labelEn: 'Rice',
+      targetWord: BaybayinEngine.transliterate('kanin'),
+      secondaryScript: 'kanin',
+      transliteration: '[ka-nin]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'noodles': LexiconEntry(
+      labelEn: 'Noodles',
+      targetWord: BaybayinEngine.transliterate('pansit'),
+      secondaryScript: 'pansit',
+      transliteration: '[pan-sit]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'bread': LexiconEntry(
+      labelEn: 'Bread',
+      targetWord: BaybayinEngine.transliterate('tinapay'),
+      secondaryScript: 'tinapay',
+      transliteration: '[ti-na-pay]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'soup': LexiconEntry(
+      labelEn: 'Soup',
+      targetWord: BaybayinEngine.transliterate('sopas'),
+      secondaryScript: 'sopas',
+      transliteration: '[so-pas]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'salad': LexiconEntry(
+      labelEn: 'Salad',
+      targetWord: BaybayinEngine.transliterate('ensalada'),
+      secondaryScript: 'ensalada',
+      transliteration: '[en-sa-la-da]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'fish': LexiconEntry(
+      labelEn: 'Fish',
+      targetWord: BaybayinEngine.transliterate('isda'),
+      secondaryScript: 'isda',
+      transliteration: '[is-da]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'egg': LexiconEntry(
+      labelEn: 'Egg',
+      targetWord: BaybayinEngine.transliterate('itlog'),
+      secondaryScript: 'itlog',
+      transliteration: '[it-log]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'burger': LexiconEntry(
+      labelEn: 'Burger',
+      targetWord: BaybayinEngine.transliterate('hamburjer'),
+      secondaryScript: 'hamburjer',
+      transliteration: '[ham-bur-jer]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'fruit': LexiconEntry(
+      labelEn: 'Fruit',
+      targetWord: BaybayinEngine.transliterate('prutas'),
+      secondaryScript: 'prutas',
+      transliteration: '[pru-tas]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'vegetable': LexiconEntry(
+      labelEn: 'Vegetable',
+      targetWord: BaybayinEngine.transliterate('gulay'),
+      secondaryScript: 'gulay',
+      transliteration: '[gu-lay]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
+    'milk': LexiconEntry(
+      labelEn: 'Milk',
+      targetWord: BaybayinEngine.transliterate('gatas'),
+      secondaryScript: 'gatas',
+      transliteration: '[ga-tas]',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'A1',
+    ),
 
     // Human & Body Parts
     'hand': LexiconEntry(
@@ -1344,6 +1679,184 @@ class LocalObjectLexicon {
       secondaryScript: 'el reloj',
       transliteration: '[rreh-loh]',
       partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+
+    // Foods
+    'apple': const LexiconEntry(
+      labelEn: 'Apple',
+      targetWord: 'Manzana',
+      secondaryScript: 'la manzana',
+      transliteration: '[mahn-sah-nah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'banana': const LexiconEntry(
+      labelEn: 'Banana',
+      targetWord: 'Plátano',
+      secondaryScript: 'el plátano',
+      transliteration: '[plah-tah-noh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'orange': const LexiconEntry(
+      labelEn: 'Orange',
+      targetWord: 'Naranja',
+      secondaryScript: 'la naranja',
+      transliteration: '[nah-rahn-hah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'pizza': const LexiconEntry(
+      labelEn: 'Pizza',
+      targetWord: 'Pizza',
+      secondaryScript: 'la pizza',
+      transliteration: '[peet-sah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'cake': const LexiconEntry(
+      labelEn: 'Cake',
+      targetWord: 'Pastel',
+      secondaryScript: 'el pastel',
+      transliteration: '[pahs-tehl]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'food': const LexiconEntry(
+      labelEn: 'Food',
+      targetWord: 'Comida',
+      secondaryScript: 'la comida',
+      transliteration: '[koh-mee-dah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'chicken': const LexiconEntry(
+      labelEn: 'Chicken',
+      targetWord: 'Pollo',
+      secondaryScript: 'el pollo',
+      transliteration: '[poh-yoh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'ice cream': const LexiconEntry(
+      labelEn: 'Ice Cream',
+      targetWord: 'Helado',
+      secondaryScript: 'el helado',
+      transliteration: '[eh-lah-doh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'dessert': const LexiconEntry(
+      labelEn: 'Dessert',
+      targetWord: 'Postre',
+      secondaryScript: 'el postre',
+      transliteration: '[pohs-treh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'snack': const LexiconEntry(
+      labelEn: 'Snack',
+      targetWord: 'Merienda',
+      secondaryScript: 'la merienda',
+      transliteration: '[meh-ryehn-dah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'meat': const LexiconEntry(
+      labelEn: 'Meat',
+      targetWord: 'Carne',
+      secondaryScript: 'la carne',
+      transliteration: '[kahr-neh]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'rice': const LexiconEntry(
+      labelEn: 'Rice',
+      targetWord: 'Arroz',
+      secondaryScript: 'el arroz',
+      transliteration: '[ah-rrohs]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'noodles': const LexiconEntry(
+      labelEn: 'Noodles',
+      targetWord: 'Fideos',
+      secondaryScript: 'los fideos',
+      transliteration: '[fee-deh-ohs]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'bread': const LexiconEntry(
+      labelEn: 'Bread',
+      targetWord: 'Pan',
+      secondaryScript: 'el pan',
+      transliteration: '[pahn]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'soup': const LexiconEntry(
+      labelEn: 'Soup',
+      targetWord: 'Sopa',
+      secondaryScript: 'la sopa',
+      transliteration: '[soh-pah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'salad': const LexiconEntry(
+      labelEn: 'Salad',
+      targetWord: 'Ensalada',
+      secondaryScript: 'la ensalada',
+      transliteration: '[ehn-sah-lah-dah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'fish': const LexiconEntry(
+      labelEn: 'Fish',
+      targetWord: 'Pescado',
+      secondaryScript: 'el pescado',
+      transliteration: '[pehs-kah-doh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'egg': const LexiconEntry(
+      labelEn: 'Egg',
+      targetWord: 'Huevo',
+      secondaryScript: 'el huevo',
+      transliteration: '[weh-voh]',
+      partOfSpeech: 'Noun • m',
+      difficultyLevel: 'A1',
+    ),
+    'burger': const LexiconEntry(
+      labelEn: 'Burger',
+      targetWord: 'Hamburguesa',
+      secondaryScript: 'la hamburguesa',
+      transliteration: '[ahm-boor-geh-sah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'fruit': const LexiconEntry(
+      labelEn: 'Fruit',
+      targetWord: 'Fruta',
+      secondaryScript: 'la fruta',
+      transliteration: '[froo-tah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'vegetable': const LexiconEntry(
+      labelEn: 'Vegetable',
+      targetWord: 'Verdura',
+      secondaryScript: 'la verdura',
+      transliteration: '[behr-doo-rah]',
+      partOfSpeech: 'Noun • f',
+      difficultyLevel: 'A1',
+    ),
+    'milk': const LexiconEntry(
+      labelEn: 'Milk',
+      targetWord: 'Leche',
+      secondaryScript: 'la leche',
+      transliteration: '[leh-cheh]',
+      partOfSpeech: 'Noun • f',
       difficultyLevel: 'A1',
     ),
 
@@ -1707,6 +2220,142 @@ class LocalObjectLexicon {
       partOfSpeech: 'Noun',
       difficultyLevel: 'HSK2',
     ),
+    'food': const LexiconEntry(
+      labelEn: 'Food',
+      targetWord: '食物',
+      secondaryScript: 'shíwù',
+      transliteration: 'shíwù',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'chicken': const LexiconEntry(
+      labelEn: 'Chicken',
+      targetWord: '鸡肉',
+      secondaryScript: 'jīròu',
+      transliteration: 'jīròu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'ice cream': const LexiconEntry(
+      labelEn: 'Ice Cream',
+      targetWord: '冰淇淋',
+      secondaryScript: 'bīngqílín',
+      transliteration: 'bīngqílín',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'dessert': const LexiconEntry(
+      labelEn: 'Dessert',
+      targetWord: '甜点',
+      secondaryScript: 'tiándiǎn',
+      transliteration: 'tiándiǎn',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'snack': const LexiconEntry(
+      labelEn: 'Snack',
+      targetWord: '小吃',
+      secondaryScript: 'xiǎochī',
+      transliteration: 'xiǎochī',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'meat': const LexiconEntry(
+      labelEn: 'Meat',
+      targetWord: '肉',
+      secondaryScript: 'ròu',
+      transliteration: 'ròu',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'rice': const LexiconEntry(
+      labelEn: 'Rice',
+      targetWord: '米饭',
+      secondaryScript: 'mǐfàn',
+      transliteration: 'mǐfàn',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'noodles': const LexiconEntry(
+      labelEn: 'Noodles',
+      targetWord: '面条',
+      secondaryScript: 'miàntiáo',
+      transliteration: 'miàntiáo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'bread': const LexiconEntry(
+      labelEn: 'Bread',
+      targetWord: '面包',
+      secondaryScript: 'miànbāo',
+      transliteration: 'miànbāo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'soup': const LexiconEntry(
+      labelEn: 'Soup',
+      targetWord: '汤',
+      secondaryScript: 'tāng',
+      transliteration: 'tāng',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'salad': const LexiconEntry(
+      labelEn: 'Salad',
+      targetWord: '沙拉',
+      secondaryScript: 'shālā',
+      transliteration: 'shālā',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'fish': const LexiconEntry(
+      labelEn: 'Fish',
+      targetWord: '鱼',
+      secondaryScript: 'yú',
+      transliteration: 'yú',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'egg': const LexiconEntry(
+      labelEn: 'Egg',
+      targetWord: '鸡蛋',
+      secondaryScript: 'jīdàn',
+      transliteration: 'jīdàn',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'burger': const LexiconEntry(
+      labelEn: 'Burger',
+      targetWord: '汉堡',
+      secondaryScript: 'hànbǎo',
+      transliteration: 'hànbǎo',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK2',
+    ),
+    'fruit': const LexiconEntry(
+      labelEn: 'Fruit',
+      targetWord: '水果',
+      secondaryScript: 'shuǐguǒ',
+      transliteration: 'shuǐguǒ',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'vegetable': const LexiconEntry(
+      labelEn: 'Vegetable',
+      targetWord: '蔬菜',
+      secondaryScript: 'shūcài',
+      transliteration: 'shūcài',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
+    'milk': const LexiconEntry(
+      labelEn: 'Milk',
+      targetWord: '牛奶',
+      secondaryScript: 'niúnǎi',
+      transliteration: 'niúnǎi',
+      partOfSpeech: 'Noun',
+      difficultyLevel: 'HSK1',
+    ),
 
     // Travel & Urban
     'bicycle': const LexiconEntry(
@@ -1913,8 +2562,10 @@ class LocalObjectLexicon {
     if (existing != null) return existing;
 
     final cleanLabel = label.trim();
+    final lower = cleanLabel.toLowerCase();
     final code = langCode.trim().toLowerCase();
 
+    // 1. Tagalog dictionary resolution if available
     if (code == 'fil' || code == 'tl') {
       final known = TagalogDictionaryService.instance.lookupByEnglish(cleanLabel);
       if (known != null) {
@@ -1927,42 +2578,265 @@ class LocalObjectLexicon {
           difficultyLevel: known.difficultyLevel,
         );
       }
-      final dictEntry = TagalogDictionaryService.instance.resolveOrSynthesize(cleanLabel);
-      return LexiconEntry(
-        labelEn: cleanLabel,
-        targetWord: dictEntry.baybayin,
-        secondaryScript: cleanLabel.toLowerCase(),
-        transliteration: dictEntry.pronunciation,
-        partOfSpeech: dictEntry.partOfSpeech,
-        difficultyLevel: dictEntry.difficultyLevel,
-      );
-    } else if (code == 'ja') {
-      return LexiconEntry(
-        labelEn: cleanLabel,
-        targetWord: cleanLabel,
-        secondaryScript: cleanLabel,
-        transliteration: cleanLabel.toLowerCase(),
-        partOfSpeech: 'Noun',
-        difficultyLevel: 'N5',
-      );
+    }
+
+    // 2. Classify semantic category
+    final isFood = lower.contains('food') ||
+        lower.contains('dish') ||
+        lower.contains('meal') ||
+        lower.contains('cuisine') ||
+        lower.contains('snack') ||
+        lower.contains('dessert') ||
+        lower.contains('sweet') ||
+        lower.contains('meat') ||
+        lower.contains('poultry') ||
+        lower.contains('chicken') ||
+        lower.contains('drink') ||
+        lower.contains('beverage') ||
+        lower.contains('dairy');
+    final isAnimal = lower.contains('animal') ||
+        lower.contains('pet') ||
+        lower.contains('creature') ||
+        lower.contains('wildlife');
+    final isPlant = lower.contains('plant') ||
+        lower.contains('flower') ||
+        lower.contains('leaf') ||
+        lower.contains('tree') ||
+        lower.contains('flora');
+    final isFurniture = lower.contains('furniture') ||
+        lower.contains('table') ||
+        lower.contains('chair') ||
+        lower.contains('desk') ||
+        lower.contains('shelf');
+    final isTool = lower.contains('tool') ||
+        lower.contains('device') ||
+        lower.contains('instrument') ||
+        lower.contains('gadget');
+
+    if (code == 'ja') {
+      if (isFood) {
+        return const LexiconEntry(
+          labelEn: 'Food',
+          targetWord: '食べ物',
+          secondaryScript: 'たべもの',
+          transliteration: 'tabemono',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'N5',
+        );
+      } else if (isAnimal) {
+        return const LexiconEntry(
+          labelEn: 'Animal',
+          targetWord: '動物',
+          secondaryScript: 'どうぶつ',
+          transliteration: 'doubutsu',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'N5',
+        );
+      } else if (isPlant) {
+        return const LexiconEntry(
+          labelEn: 'Plant',
+          targetWord: '植物',
+          secondaryScript: 'しょくぶつ',
+          transliteration: 'shokubutsu',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'N5',
+        );
+      } else if (isFurniture) {
+        return const LexiconEntry(
+          labelEn: 'Furniture',
+          targetWord: '家具',
+          secondaryScript: 'かぐ',
+          transliteration: 'kagu',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'N5',
+        );
+      } else if (isTool) {
+        return const LexiconEntry(
+          labelEn: 'Tool',
+          targetWord: '道具',
+          secondaryScript: 'どうぐ',
+          transliteration: 'dougu',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'N5',
+        );
+      } else {
+        return const LexiconEntry(
+          labelEn: 'Item',
+          targetWord: '物',
+          secondaryScript: 'もの',
+          transliteration: 'mono',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'N5',
+        );
+      }
     } else if (code == 'zh' || code.startsWith('zh')) {
-      return LexiconEntry(
-        labelEn: cleanLabel,
-        targetWord: cleanLabel,
-        secondaryScript: cleanLabel.toLowerCase(),
-        transliteration: cleanLabel.toLowerCase(),
-        partOfSpeech: 'Noun',
-        difficultyLevel: 'HSK1',
-      );
+      if (isFood) {
+        return const LexiconEntry(
+          labelEn: 'Food',
+          targetWord: '食物',
+          secondaryScript: 'shíwù',
+          transliteration: 'shíwù',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'HSK1',
+        );
+      } else if (isAnimal) {
+        return const LexiconEntry(
+          labelEn: 'Animal',
+          targetWord: '动物',
+          secondaryScript: 'dòngwù',
+          transliteration: 'dòngwù',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'HSK1',
+        );
+      } else if (isPlant) {
+        return const LexiconEntry(
+          labelEn: 'Plant',
+          targetWord: '植物',
+          secondaryScript: 'zhíwù',
+          transliteration: 'zhíwù',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'HSK1',
+        );
+      } else if (isFurniture) {
+        return const LexiconEntry(
+          labelEn: 'Furniture',
+          targetWord: '家具',
+          secondaryScript: 'jiājù',
+          transliteration: 'jiājù',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'HSK2',
+        );
+      } else if (isTool) {
+        return const LexiconEntry(
+          labelEn: 'Tool',
+          targetWord: '工具',
+          secondaryScript: 'gōngjù',
+          transliteration: 'gōngjù',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'HSK2',
+        );
+      } else {
+        return const LexiconEntry(
+          labelEn: 'Item',
+          targetWord: '物品',
+          secondaryScript: 'wùpǐn',
+          transliteration: 'wùpǐn',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'HSK1',
+        );
+      }
+    } else if (code == 'fil' || code == 'tl') {
+      if (isFood) {
+        return LexiconEntry(
+          labelEn: 'Food',
+          targetWord: BaybayinEngine.transliterate('pagkain'),
+          secondaryScript: 'pagkain',
+          transliteration: '[pag-ka-in]',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'A1',
+        );
+      } else if (isAnimal) {
+        return LexiconEntry(
+          labelEn: 'Animal',
+          targetWord: BaybayinEngine.transliterate('hayop'),
+          secondaryScript: 'hayop',
+          transliteration: '[ha-yop]',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'A1',
+        );
+      } else if (isPlant) {
+        return LexiconEntry(
+          labelEn: 'Plant',
+          targetWord: BaybayinEngine.transliterate('halaman'),
+          secondaryScript: 'halaman',
+          transliteration: '[ha-la-man]',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'A1',
+        );
+      } else if (isFurniture) {
+        return LexiconEntry(
+          labelEn: 'Furniture',
+          targetWord: BaybayinEngine.transliterate('kasangkapan'),
+          secondaryScript: 'kasangkapan',
+          transliteration: '[ka-sang-ka-pan]',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'A1',
+        );
+      } else if (isTool) {
+        return LexiconEntry(
+          labelEn: 'Tool',
+          targetWord: BaybayinEngine.transliterate('kagamitan'),
+          secondaryScript: 'kagamitan',
+          transliteration: '[ka-ga-mi-tan]',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'A1',
+        );
+      } else {
+        return LexiconEntry(
+          labelEn: 'Item',
+          targetWord: BaybayinEngine.transliterate('bagay'),
+          secondaryScript: 'bagay',
+          transliteration: '[ba-gay]',
+          partOfSpeech: 'Noun',
+          difficultyLevel: 'A1',
+        );
+      }
     } else {
-      return LexiconEntry(
-        labelEn: cleanLabel,
-        targetWord: cleanLabel,
-        secondaryScript: 'el/la ${cleanLabel.toLowerCase()}',
-        transliteration: '[${cleanLabel.toLowerCase()}]',
-        partOfSpeech: 'Noun',
-        difficultyLevel: 'A1',
-      );
+      if (isFood) {
+        return const LexiconEntry(
+          labelEn: 'Food',
+          targetWord: 'Comida',
+          secondaryScript: 'la comida',
+          transliteration: '[koh-mee-dah]',
+          partOfSpeech: 'Noun • f',
+          difficultyLevel: 'A1',
+        );
+      } else if (isAnimal) {
+        return const LexiconEntry(
+          labelEn: 'Animal',
+          targetWord: 'Animal',
+          secondaryScript: 'el animal',
+          transliteration: '[ah-nee-mahl]',
+          partOfSpeech: 'Noun • m',
+          difficultyLevel: 'A1',
+        );
+      } else if (isPlant) {
+        return const LexiconEntry(
+          labelEn: 'Plant',
+          targetWord: 'Planta',
+          secondaryScript: 'la planta',
+          transliteration: '[plahn-tah]',
+          partOfSpeech: 'Noun • f',
+          difficultyLevel: 'A1',
+        );
+      } else if (isFurniture) {
+        return const LexiconEntry(
+          labelEn: 'Furniture',
+          targetWord: 'Mueble',
+          secondaryScript: 'el mueble',
+          transliteration: '[mweh-bleh]',
+          partOfSpeech: 'Noun • m',
+          difficultyLevel: 'A1',
+        );
+      } else if (isTool) {
+        return const LexiconEntry(
+          labelEn: 'Tool',
+          targetWord: 'Herramienta',
+          secondaryScript: 'la herramienta',
+          transliteration: '[ehr-rah-myehn-tah]',
+          partOfSpeech: 'Noun • f',
+          difficultyLevel: 'A1',
+        );
+      } else {
+        return const LexiconEntry(
+          labelEn: 'Item',
+          targetWord: 'Objeto',
+          secondaryScript: 'el objeto',
+          transliteration: '[ohb-heh-toh]',
+          partOfSpeech: 'Noun • m',
+          difficultyLevel: 'A1',
+        );
+      }
     }
   }
 }

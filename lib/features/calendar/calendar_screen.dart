@@ -135,16 +135,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               ),
                             ),
                             const SizedBox(width: 6),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: Image.asset(
-                                'assets/images/logo.png',
-                                width: 22,
-                                height: 22,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
                             Flexible(
                               child: Text(
                                 _formatMonthYear(_currentMonth),

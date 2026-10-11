@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../app/providers.dart';
 import '../../core/ai/ai_settings_provider.dart';
+import '../../core/languages/baybayin_engine.dart';
 import '../../core/languages/chin_format_helper.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/languages/sentence_generator.dart';
@@ -52,6 +53,11 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
   List<ExampleSentence>? _cachedAiSentences;
   bool _isLoadingAiSentences = false;
   String? _lastLoadedWord;
+  bool _isEditing = false;
+  late final TextEditingController _wordController;
+  late final TextEditingController _meaningController;
+  late final TextEditingController _pronunciationController;
+  late final TextEditingController _customSentenceController;
 
   Future<void> _fetchAiSentences({
     required String languageCode,
@@ -150,6 +156,10 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _wordController = TextEditingController();
+    _meaningController = TextEditingController();
+    _pronunciationController = TextEditingController();
+    _customSentenceController = TextEditingController();
     _ttsService.init();
 
     // Default to the first detected object or primary
@@ -346,8 +356,97 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
 
   @override
   void dispose() {
+    _wordController.dispose();
+    _meaningController.dispose();
+    _pronunciationController.dispose();
+    _customSentenceController.dispose();
     _ttsService.stop();
     super.dispose();
+  }
+
+  Future<void> _toggleEdit(
+    Polaroid p, {
+    required String activeWord,
+    required String activeEnglishLabel,
+    required String activeTranslit,
+  }) async {
+    if (!_isEditing) {
+      _wordController.text = activeWord;
+      _meaningController.text = activeEnglishLabel;
+      _pronunciationController.text = activeTranslit;
+      _customSentenceController.text = _cachedAiSentences?.isNotEmpty == true
+          ? _cachedAiSentences!.first.nativeSentence
+          : '';
+      setState(() => _isEditing = true);
+    } else {
+      final updatedWord = _wordController.text.trim();
+      final updatedMeaning = _meaningController.text.trim();
+      final updatedTranslit = _pronunciationController.text.trim();
+      final updatedSentence = _customSentenceController.text.trim();
+
+      String? secondary = p.secondaryScript;
+      if ((p.languageCode == 'tl' || p.languageCode == 'fil') && updatedWord.isNotEmpty) {
+        secondary = BaybayinEngine.transliterate(updatedWord);
+      }
+
+      final updated = p.copyWith(
+        selectedWord: updatedWord.isNotEmpty ? updatedWord : p.selectedWord,
+        labelEn: updatedMeaning.isNotEmpty ? updatedMeaning : p.labelEn,
+        transliteration: updatedTranslit.isNotEmpty ? updatedTranslit : p.transliteration,
+        secondaryScript: secondary,
+      );
+
+      if (updatedSentence.isNotEmpty) {
+        final customEx = ExampleSentence(
+          nativeSentence: updatedSentence,
+          transliteration: '',
+          englishTranslation: updatedMeaning.isNotEmpty ? updatedMeaning : 'Custom note',
+          styleLabel: 'Custom',
+        );
+        _cachedAiSentences = [
+          customEx,
+          ...?_cachedAiSentences?.where((s) => s.styleLabel != 'Custom'),
+        ];
+      }
+
+      await ref.read(polaroidsProvider.notifier).updatePolaroid(updated);
+
+      if (mounted) {
+        setState(() => _isEditing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Customizations saved to Polaroid print!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  void _autoTranscribe(Polaroid p) {
+    final word = _wordController.text.trim();
+    if (word.isEmpty) return;
+
+    if (p.languageCode == 'tl' || p.languageCode == 'fil') {
+      final baybayin = BaybayinEngine.transliterate(word);
+      final pronunciation = BaybayinEngine.formatPronunciation(word);
+      setState(() {
+        _wordController.text = baybayin;
+        _pronunciationController.text = '$word · $pronunciation';
+      });
+    } else {
+      final match = LocalObjectLexicon.reverseLookup(
+        targetWord: word,
+        langCode: p.languageCode,
+      );
+      if (match != null && match.transliteration.isNotEmpty) {
+        setState(() {
+          _pronunciationController.text = match.secondaryScript.isNotEmpty
+              ? '${match.secondaryScript} (${match.transliteration})'
+              : match.transliteration;
+        });
+      }
+    }
   }
 
   @override
@@ -489,10 +588,6 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
           icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => context.pop(),
         ),
-        title: Text(
-          '${lang.displayName} Archive',
-          style: MemoriaTokens.headlineSm(),
-        ),
         actions: [
           // Favorite rubber stamp toggle
           IconButton(
@@ -502,6 +597,20 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
             ),
             tooltip: 'Favorite Exposure',
             onPressed: () => _toggleFavorite(p, isFavorite),
+          ),
+          // Pencil / Check inline customization toggle (in between like and trash)
+          IconButton(
+            icon: Icon(
+              _isEditing ? LucideIcons.check : LucideIcons.pencil,
+              color: _isEditing ? MemoriaTokens.primary : MemoriaTokens.onSurface,
+            ),
+            tooltip: _isEditing ? 'Done Editing' : 'Customize Polaroid Text',
+            onPressed: () => _toggleEdit(
+              p,
+              activeWord: activeWord,
+              activeEnglishLabel: activeEnglishLabel.isNotEmpty ? activeEnglishLabel : p.resolvedEnglishLabel,
+              activeTranslit: activeTranslit,
+            ),
           ),
           // Delete option
           IconButton(
@@ -517,110 +626,215 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
           children: [
             // 1. Hero Polaroid Print Artifact Workspace
             Center(
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.topCenter,
-                children: [
-                  // Physical Polaroid Frame
-                  Transform.rotate(
-                    angle: 0.015,
-                    child: RepaintBoundary(
-                      key: _polaroidRepaintKey,
-                      child: Container(
-                        width: 320,
-                        decoration: BoxDecoration(
-                          color: MemoriaTokens.polaroidCard,
-                          borderRadius: BorderRadius.circular(MemoriaTokens.radiusSm),
-                          border: Border.all(color: MemoriaTokens.polaroidBorder, width: 1),
-                          boxShadow: MemoriaTokens.shadowPolaroid,
-                        ),
-                        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Photographic Aperture Window
-                            AspectRatio(
-                              aspectRatio: p.format.ratio,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(2),
-                                  border: Border.all(
-                                    color: Colors.black.withValues(alpha: 0.12),
-                                    width: 0.8,
-                                  ),
-                                ),
-                                clipBehavior: Clip.antiAlias,
-                                child: File(p.imagePath).existsSync()
-                                    ? Image.file(File(p.imagePath), fit: BoxFit.cover)
-                                    : Container(
-                                        color: MemoriaTokens.surfaceContainerHigh,
-                                        child: const Center(
-                                          child: Icon(LucideIcons.imageOff, size: 48, color: MemoriaTokens.outline),
-                                        ),
-                                      ),
-                              ),
-                            ),
-
-                            // Signature Polaroid Chin with Handwritten Calligraphy
-                            Container(
-                              constraints: const BoxConstraints(minHeight: 64),
-                              padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        detailLine1,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: MemoriaTokens.handwrittenChin(
-                                          fontSize: detailLine1.length > 18 ? 22 : (detailLine1.length > 12 ? 26 : 30),
-                                          color: MemoriaTokens.onSurface,
-                                        ),
-                                      ),
-                                      if (detailLine2.isNotEmpty) ...[
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          detailLine2,
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-
-                                  // Rubber Heart Ink Stamp
-                                  Positioned(
-                                    right: 0,
-                                    bottom: 0,
-                                    child: RubberStampWidget(
-                                      isStamped: isFavorite,
-                                      onTap: () => _toggleFavorite(p, isFavorite),
-                                      size: 32,
+              child: Transform.rotate(
+                angle: 0.015,
+                child: RepaintBoundary(
+                  key: _polaroidRepaintKey,
+                  child: Hero(
+                    tag: 'polaroid_card_${p.id}',
+                    createRectTween: (begin, end) =>
+                        MaterialRectArcTween(begin: begin, end: end),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.topCenter,
+                      children: [
+                        Container(
+                          width: 320,
+                          decoration: BoxDecoration(
+                            color: MemoriaTokens.polaroidCard,
+                            borderRadius: BorderRadius.circular(MemoriaTokens.radiusSm),
+                            border: Border.all(color: MemoriaTokens.polaroidBorder, width: 1),
+                            boxShadow: MemoriaTokens.shadowPolaroid,
+                          ),
+                          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Photographic Aperture Window
+                              AspectRatio(
+                                aspectRatio: p.format.ratio,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(2),
+                                    border: Border.all(
+                                      color: Colors.black.withValues(alpha: 0.12),
+                                      width: 0.8,
                                     ),
                                   ),
-                                ],
+                                  clipBehavior: Clip.antiAlias,
+                                  child: File(p.imagePath).existsSync()
+                                      ? Image.file(File(p.imagePath), fit: BoxFit.cover)
+                                      : Container(
+                                          color: MemoriaTokens.surfaceContainerHigh,
+                                          child: const Center(
+                                            child: Icon(LucideIcons.imageOff, size: 48, color: MemoriaTokens.outline),
+                                          ),
+                                        ),
+                                ),
                               ),
-                            ),
-                          ],
+
+                              // Signature Polaroid Chin with Handwritten Calligraphy
+                              Container(
+                                constraints: const BoxConstraints(minHeight: 64),
+                                padding: const EdgeInsets.only(top: 8, left: 4, right: 4),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    if (_isEditing)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  flex: 6,
+                                                  child: TextField(
+                                                    controller: _wordController,
+                                                    textAlign: TextAlign.center,
+                                                    style: MemoriaTokens.handwrittenChin(
+                                                      fontSize: 22,
+                                                      color: MemoriaTokens.onSurface,
+                                                    ),
+                                                    decoration: InputDecoration(
+                                                      isDense: true,
+                                                      hintText: 'Target Word',
+                                                      hintStyle: MemoriaTokens.handwrittenChin(
+                                                        fontSize: 18,
+                                                        color: MemoriaTokens.outline,
+                                                      ),
+                                                      contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                                                      filled: true,
+                                                      fillColor: Colors.black.withValues(alpha: 0.04),
+                                                      border: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(4),
+                                                        borderSide: const BorderSide(color: MemoriaTokens.primary, width: 0.8),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Expanded(
+                                                  flex: 5,
+                                                  child: TextField(
+                                                    controller: _meaningController,
+                                                    textAlign: TextAlign.center,
+                                                    style: MemoriaTokens.bodySm().copyWith(fontWeight: FontWeight.w600),
+                                                    decoration: InputDecoration(
+                                                      isDense: true,
+                                                      hintText: 'Meaning',
+                                                      hintStyle: MemoriaTokens.bodySm(color: MemoriaTokens.outline),
+                                                      contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                                                      filled: true,
+                                                      fillColor: Colors.black.withValues(alpha: 0.04),
+                                                      border: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(4),
+                                                        borderSide: const BorderSide(color: MemoriaTokens.polaroidBorder, width: 0.8),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            TextField(
+                                              controller: _pronunciationController,
+                                              textAlign: TextAlign.center,
+                                              style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
+                                              decoration: InputDecoration(
+                                                isDense: true,
+                                                hintText: 'Pronunciation Guide (e.g. neko, [ak-lat])',
+                                                hintStyle: MemoriaTokens.bodySm(color: MemoriaTokens.outline),
+                                                contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                                                filled: true,
+                                                fillColor: Colors.black.withValues(alpha: 0.04),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  borderSide: const BorderSide(color: MemoriaTokens.polaroidBorder, width: 0.8),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                          ],
+                                        ),
+                                      )
+                                    else
+                                      GestureDetector(
+                                        onTap: () => _toggleEdit(
+                                          p,
+                                          activeWord: activeWord,
+                                          activeEnglishLabel: activeEnglishLabel.isNotEmpty ? activeEnglishLabel : p.resolvedEnglishLabel,
+                                          activeTranslit: activeTranslit,
+                                        ),
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              detailLine1,
+                                              textAlign: TextAlign.center,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: MemoriaTokens.handwrittenChin(
+                                                fontSize: detailLine1.length > 18 ? 22 : (detailLine1.length > 12 ? 26 : 30),
+                                                color: MemoriaTokens.onSurface,
+                                              ),
+                                            ),
+                                            if (detailLine2.isNotEmpty) ...[
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                detailLine2,
+                                                textAlign: TextAlign.center,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+
+                                    // Rubber Heart Ink Stamp
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: RubberStampWidget(
+                                        isStamped: isFavorite,
+                                        onTap: () => _toggleFavorite(p, isFavorite),
+                                        size: 32,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+
+                        // Washi Tape Header
+                        const Positioned(
+                          top: -10,
+                          child: WashiTapeWidget(width: 88, height: 20),
+                        ),
+                      ],
                     ),
                   ),
-
-                  // Washi Tape Header
-                  const Positioned(
-                    top: -10,
-                    child: WashiTapeWidget(width: 88, height: 20),
-                  ),
-                ],
+                ),
               ),
             ),
+
+            if (_isEditing) ...[
+              const SizedBox(height: 12),
+              ActionChip(
+                avatar: const Icon(LucideIcons.sparkles, size: 14, color: MemoriaTokens.primary),
+                label: const Text('Auto-Transcribe Pronunciation'),
+                labelStyle: MemoriaTokens.labelSm(color: MemoriaTokens.primary),
+                backgroundColor: MemoriaTokens.primaryContainer.withValues(alpha: 0.5),
+                side: const BorderSide(color: MemoriaTokens.primary, width: 0.8),
+                onPressed: () => _autoTranscribe(p),
+              ),
+            ],
 
             const SizedBox(height: 24),
 
@@ -911,6 +1125,66 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
 
             const SizedBox(height: 18),
 
+            // Custom Example Sentence / Note Card
+            if (_isEditing || (_cachedAiSentences?.any((s) => s.styleLabel == 'Custom') ?? false)) ...[
+              Container(
+                decoration: BoxDecoration(
+                  color: MemoriaTokens.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(MemoriaTokens.radiusLg),
+                  border: Border.all(color: MemoriaTokens.polaroidBorder, width: 1),
+                  boxShadow: MemoriaTokens.shadowLevel1,
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'CUSTOM EXAMPLE SENTENCE & NOTE',
+                          style: MemoriaTokens.labelSm(
+                            color: MemoriaTokens.onSurfaceVariant,
+                          ).copyWith(letterSpacing: 1.0, fontWeight: FontWeight.bold),
+                        ),
+                        if (_isEditing)
+                          Text(
+                            'Editable',
+                            style: MemoriaTokens.labelSm(color: MemoriaTokens.primary),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    if (_isEditing)
+                      TextField(
+                        controller: _customSentenceController,
+                        maxLines: 2,
+                        style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurface),
+                        decoration: InputDecoration(
+                          hintText: 'Add an authentic example sentence or personal note...',
+                          hintStyle: MemoriaTokens.bodySm(color: MemoriaTokens.outline),
+                          filled: true,
+                          fillColor: MemoriaTokens.surfaceContainerLow,
+                          contentPadding: const EdgeInsets.all(12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(MemoriaTokens.radiusSm),
+                            borderSide: const BorderSide(color: MemoriaTokens.polaroidBorder, width: 0.8),
+                          ),
+                        ),
+                      )
+                    else if (_cachedAiSentences != null)
+                      ..._cachedAiSentences!.where((s) => s.styleLabel == 'Custom').map(
+                            (s) => Text(
+                              s.nativeSentence,
+                              style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurface),
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+            ],
+
             // 3. Contextual Example Sentences Card
             _buildExampleSentencesSection(
               languageCode: p.languageCode,
@@ -1042,25 +1316,13 @@ class _PolaroidDetailScreenState extends ConsumerState<PolaroidDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.sparkles,
-                      size: 16,
-                      color: MemoriaTokens.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'EXAMPLE SENTENCES',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: MemoriaTokens.labelSm(
-                          color: MemoriaTokens.onSurfaceVariant,
-                        ).copyWith(letterSpacing: 1.1, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'EXAMPLE SENTENCES',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: MemoriaTokens.labelSm(
+                    color: MemoriaTokens.onSurfaceVariant,
+                  ).copyWith(letterSpacing: 1.1, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: 8),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
@@ -63,24 +64,28 @@ class LanguagePickerSheet extends ConsumerWidget {
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),
-                  child: ListTile(
-                    dense: true,
-                    leading: LanguageFlagIcon(
-                      language: lang,
-                      width: 28,
-                      borderRadius: 4.0,
-                    ),
-                    title: Text(
-                      '${lang.displayName} (${lang.englishName})',
-                      style: MemoriaTokens.labelLg(
-                        color: isSelected ? MemoriaTokens.primaryDark : MemoriaTokens.onSurface,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: ListTile(
+                      dense: true,
+                      leading: LanguageFlagIcon(
+                        language: lang,
+                        width: 28,
+                        borderRadius: 4.0,
                       ),
+                      title: Text(
+                        '${lang.displayName} (${lang.englishName})',
+                        style: MemoriaTokens.labelLg(
+                          color: isSelected ? MemoriaTokens.primaryDark : MemoriaTokens.onSurface,
+                        ),
+                      ),
+                      trailing: isSelected ? const Icon(LucideIcons.circleCheck, color: MemoriaTokens.primary) : null,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref.read(activeLanguageProvider.notifier).state = lang;
+                        Navigator.of(context).pop();
+                      },
                     ),
-                    trailing: isSelected ? const Icon(LucideIcons.circleCheck, color: MemoriaTokens.primary) : null,
-                    onTap: () {
-                      ref.read(activeLanguageProvider.notifier).state = lang;
-                      Navigator.of(context).pop();
-                    },
                   ),
                 );
               }),
@@ -102,24 +107,28 @@ class LanguagePickerSheet extends ConsumerWidget {
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),
-                  child: ListTile(
-                    dense: true,
-                    leading: LanguageFlagIcon(
-                      language: lang,
-                      width: 28,
-                      borderRadius: 4.0,
-                    ),
-                    title: Text(
-                      '${lang.displayName} (${lang.englishName})',
-                      style: MemoriaTokens.labelLg(
-                        color: isSelected ? MemoriaTokens.secondary : MemoriaTokens.onSurface,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: ListTile(
+                      dense: true,
+                      leading: LanguageFlagIcon(
+                        language: lang,
+                        width: 28,
+                        borderRadius: 4.0,
                       ),
+                      title: Text(
+                        '${lang.displayName} (${lang.englishName})',
+                        style: MemoriaTokens.labelLg(
+                          color: isSelected ? MemoriaTokens.secondary : MemoriaTokens.onSurface,
+                        ),
+                      ),
+                      trailing: isSelected ? const Icon(LucideIcons.circleCheck, color: MemoriaTokens.secondary) : null,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref.read(activeLanguageProvider.notifier).state = lang;
+                        Navigator.of(context).pop();
+                      },
                     ),
-                    trailing: isSelected ? const Icon(LucideIcons.circleCheck, color: MemoriaTokens.secondary) : null,
-                    onTap: () {
-                      ref.read(activeLanguageProvider.notifier).state = lang;
-                      Navigator.of(context).pop();
-                    },
                   ),
                 );
               }),

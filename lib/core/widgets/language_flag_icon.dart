@@ -49,6 +49,7 @@ class LanguageFlagIcon extends StatelessWidget {
         ),
         child: CountryFlag.simplified(
           country,
+          key: ValueKey('country_flag_${country.name}'),
           aspectRatio: 3 / 2,
         ),
       );

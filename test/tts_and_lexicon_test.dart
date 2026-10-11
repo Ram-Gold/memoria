@@ -110,7 +110,8 @@ void main() {
     test('Synthesizes valid entries for unknown objects without leaving raw English', () {
       final unknownFil = LocalObjectLexicon.synthesizeEntry(label: 'telescope', langCode: 'fil');
       expect(BaybayinEngine.hasBaybayinGlyphs(unknownFil.targetWord), isTrue);
-      expect(unknownFil.secondaryScript, equals('telescope'));
+      expect(unknownFil.secondaryScript, equals('bagay'));
+      expect(unknownFil.transliteration, equals('[ba-gay]'));
     });
   });
 }

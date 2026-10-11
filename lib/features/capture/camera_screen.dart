@@ -11,7 +11,6 @@ import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
-import '../../core/languages/language_profile.dart';
 import '../../core/theme/memoria_tokens.dart';
 import '../../core/widgets/language_flag_icon.dart';
 import 'language_picker_sheet.dart';
@@ -343,17 +342,17 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
         screenSize: screenSize,
       );
 
-      // Wait for both mechanical ejection and cropping to finish
+      // Wait ONLY for the mechanical ejection animation to finish
       await ejectionFuture;
-      final String imagePath = await cropFuture;
 
       if (mounted) {
-        // Hand off seamlessly to the develop screen with zero UI hitch
+        // Hand off immediately to the develop screen; cropping completes concurrently in the background
         final shotFormat = ref.read(selectedPolaroidFormatProvider);
         final pushFuture = context.push(
           '/develop',
           extra: {
-            'imagePath': imagePath,
+            'imagePath': rawPath,
+            'croppedFuture': cropFuture,
             'layoutId': shotFormat.id,
           },
         );
@@ -386,15 +385,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
       HapticFeedback.mediumImpact();
       context.push('/develop', extra: picked.path);
     }
-  }
-
-  void _cycleLanguage() {
-    final active = ref.read(activeLanguageProvider);
-    HapticFeedback.selectionClick();
-    final all = LanguageRegistry.presets;
-    final currentIndex = all.indexWhere((l) => l.code == active.code);
-    final nextIndex = (currentIndex + 1) % all.length;
-    ref.read(activeLanguageProvider.notifier).state = all[nextIndex];
   }
 
   void _showLanguagePicker() {
@@ -628,8 +618,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
 
                       // Language Selector
                       GestureDetector(
-                        onTap: _cycleLanguage,
-                        onLongPress: _showLanguagePicker,
+                        onTap: _showLanguagePicker,
                         child: Container(
                           width: 44,
                           height: 44,
@@ -638,10 +627,18 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                             shape: BoxShape.circle,
                           ),
                           child: Center(
-                            child: LanguageFlagIcon(
-                              language: activeLanguage,
-                              width: 26,
-                              borderRadius: 4.0,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              transitionBuilder: (child, animation) => ScaleTransition(
+                                scale: animation,
+                                child: child,
+                              ),
+                              child: LanguageFlagIcon(
+                                key: ValueKey('camera_flag_${activeLanguage.code}'),
+                                language: activeLanguage,
+                                width: 26,
+                                borderRadius: 4.0,
+                              ),
                             ),
                           ),
                         ),

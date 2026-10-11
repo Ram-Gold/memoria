@@ -1,6 +1,7 @@
 import '../../data/repositories/polaroid_repository.dart';
 import '../../data/services/local_object_lexicon.dart';
 import '../../domain/models/analysis_result.dart';
+import '../languages/script_validator.dart';
 import 'dictionary_retriever.dart';
 import 'memory_retriever.dart';
 import 'models/rag_context.dart';
@@ -99,8 +100,13 @@ class RagService {
       }).toList();
     }
 
+    // Orthographic guarantee: Sanitize all objects so raw English never leaks into foreign slots
+    final sanitizedObjects = objects
+        .map((obj) => ScriptValidator.sanitizeObject(obj, languageCode))
+        .toList();
+
     return rawResult.copyWith(
-      detectedObjects: objects,
+      detectedObjects: sanitizedObjects,
       ragContext: context,
     );
   }

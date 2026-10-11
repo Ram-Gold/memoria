@@ -69,7 +69,7 @@ class LanguageRegistry {
 
   static const LanguageProfile filipino = LanguageProfile(
     code: 'fil',
-    displayName: 'Filipino (Baybayin)',
+    displayName: 'Filipino (ᜊᜌ᜔ᜊᜌᜒᜈ᜔)',
     englishName: 'Filipino',
     flagEmoji: '🇵🇭',
     country: CountryPhl(),

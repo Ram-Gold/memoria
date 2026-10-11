@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:turnable_page/turnable_page.dart';
 import '../../app/providers.dart';
+import '../../core/animations/polaroid_flight_shuttle.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/theme/memoria_tokens.dart';
 import '../../core/widgets/language_flag_icon.dart';
@@ -464,21 +465,45 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                               fit: BoxFit.scaleDown,
                               child: SizedBox(
                                 width: 146,
-                                child: PolaroidFrame(
-                                  imagePath: p.imagePath,
-                                  format: p.format,
-                                  primaryText: p.chinLine1,
-                                  subtitleText: p.chinLine2,
-                                  showWashiTape: true,
-                                  isStamped: p.isFavorite,
+                                child: Transform.rotate(
                                   angle: tilt,
-                                  chinHeight: 34.0,
-                                  cardPadding: 5.0,
-                                  primaryFontSize: 15,
-                                  subtitleFontSize: 9.5,
-                                  onTap: () {
-                                    context.push('/polaroid/${p.id}', extra: p);
-                                  },
+                                  child: Hero(
+                                    tag: 'polaroid_card_${p.id}',
+                                    createRectTween: (begin, end) =>
+                                        MaterialRectArcTween(begin: begin, end: end),
+                                    flightShuttleBuilder: (
+                                      flightContext,
+                                      animation,
+                                      flightDirection,
+                                      fromHeroContext,
+                                      toHeroContext,
+                                    ) =>
+                                        PolaroidFlightShuttle.buildShuttle(
+                                      animation: animation,
+                                      flightDirection: flightDirection,
+                                      fromHeroContext: fromHeroContext,
+                                      toHeroContext: toHeroContext,
+                                      sourceAngle: tilt,
+                                      targetAngle: 0.015,
+                                    ),
+                                    child: PolaroidFrame(
+                                      imagePath: p.imagePath,
+                                      format: p.format,
+                                      primaryText: p.chinLine1,
+                                      subtitleText: p.chinLine2,
+                                      showWashiTape: true,
+                                      isStamped: p.isFavorite,
+                                      angle: 0.0,
+                                      chinHeight: 34.0,
+                                      cardPadding: 5.0,
+                                      primaryFontSize: 15,
+                                      subtitleFontSize: 9.5,
+                                      onTap: () {
+                                        HapticFeedback.selectionClick();
+                                        context.push('/polaroid/${p.id}', extra: p);
+                                      },
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -680,9 +705,13 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                                   borderRadius: 3.0,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  '${lang.displayName} Collection',
-                                  style: MemoriaTokens.headlineSm().copyWith(fontSize: 14),
+                                Expanded(
+                                  child: Text(
+                                    '${lang.displayName} Collection',
+                                    style: MemoriaTokens.headlineSm().copyWith(fontSize: 14),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
@@ -690,10 +719,13 @@ class _ScrapbookScreenState extends ConsumerState<ScrapbookScreen> {
                             Text(
                               '${items.length} developed exposure${items.length == 1 ? '' : 's'}',
                               style: MemoriaTokens.bodySm().copyWith(fontSize: 11),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(width: 8),
                       const Icon(LucideIcons.chevronRight, color: MemoriaTokens.outline, size: 18),
                     ],
                   ),

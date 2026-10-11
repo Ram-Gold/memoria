@@ -6,7 +6,9 @@ import '../../core/languages/baybayin_engine.dart';
 import '../../core/languages/language_profile.dart';
 import '../../core/services/tagalog_dictionary_service.dart';
 import '../../domain/models/analysis_result.dart';
+import '../../domain/models/detected_object.dart';
 import '../../domain/services/vision_service.dart';
+import '../../core/languages/script_validator.dart';
 import 'mock_vision_service.dart';
 
 /// Vision service implementation for Google Gemini (e.g. gemini-2.0-flash / gemini-1.5-flash with strict JSON schema).
@@ -96,9 +98,13 @@ CRITICAL INVARIANTS:
 4. 'label_en' must be the concise, natural English object label (1-2 words, e.g. "Book", "Coffee Cup", "Cat").
 5. Follow the specific translation & transcription pipeline:
    ${language.promptInstructions}
-6. Pedagogical Rule: Always choose the most common beginner-friendly everyday word (e.g. A1 / N5 level). For example in Japanese, prefer マグカップ or コップ rather than archaic 珈琲碗. In Filipino, prefer common terms (e.g. aklat, mesa, baso).
-7. Provide a concise scene_description (max 80 chars).
-8. Normalized bounding box coordinates must follow [ymin, xmin, ymax, xmax] on a scale of 0 to 1000 representing each object's exact location.
+6. CRITICAL ORTHOGRAPHIC RULE: 'target_word' MUST NEVER BE IN ENGLISH when target language is Japanese ('ja'), Chinese ('zh'), or Filipino ('tl').
+   - Japanese: Kanji or Kana (e.g. '食べ物', '鶏肉', 'アイスクリーム'). NEVER English 'Food'.
+   - Chinese: Simplified Hanzi (e.g. '食物', '鸡肉', '冰淇淋'). NEVER English 'Food'.
+   - Filipino: Authentic Baybayin script or Tagalog translation. NEVER English.
+7. Pedagogical Rule: Always choose the most common beginner-friendly everyday word (e.g. A1 / N5 level). For example in Japanese, prefer マグカップ or コップ rather than archaic 珈琲碗. In Filipino, prefer common terms (e.g. aklat, mesa, baso).
+8. Provide a concise scene_description (max 80 chars).
+9. Normalized bounding box coordinates must follow [ymin, xmin, ymax, xmax] on a scale of 0 to 1000 representing each object's exact location.
 ''';
 
       final url = Uri.parse(
@@ -186,9 +192,10 @@ CRITICAL INVARIANTS:
       final parsedJson = jsonDecode(cleanedJson) as Map<String, dynamic>;
       var result = AnalysisResult.fromJson(parsedJson);
 
-      // Post-processing hybrid validation for Filipino Baybayin
+      // 1. Post-processing hybrid validation for Filipino Baybayin
+      List<DetectedObject> verifiedObjects = result.detectedObjects;
       if (language.code == 'fil' || language.code == 'tl') {
-        final verifiedObjects = result.detectedObjects.map((obj) {
+        verifiedObjects = verifiedObjects.map((obj) {
           final dictEntry = TagalogDictionaryService.instance.lookupByEnglish(obj.labelEn);
           final tagalogWord = dictEntry?.word ??
               (obj.secondaryScript != null && obj.secondaryScript!.trim().isNotEmpty
@@ -209,15 +216,20 @@ CRITICAL INVARIANTS:
             transliteration: pronunciation,
           );
         }).toList();
-
-        result = AnalysisResult(
-          sessionId: result.sessionId,
-          languageCode: result.languageCode,
-          primaryObjectId: result.primaryObjectId,
-          sceneDescription: result.sceneDescription,
-          detectedObjects: verifiedObjects,
-        );
       }
+
+      // 2. Strict orthographic sanitization across all languages (never leak English)
+      final sanitizedObjects = verifiedObjects
+          .map((obj) => ScriptValidator.sanitizeObject(obj, language.code))
+          .toList();
+
+      result = AnalysisResult(
+        sessionId: result.sessionId,
+        languageCode: result.languageCode,
+        primaryObjectId: result.primaryObjectId,
+        sceneDescription: result.sceneDescription,
+        detectedObjects: sanitizedObjects,
+      );
 
       return result;
     } catch (e, stack) {

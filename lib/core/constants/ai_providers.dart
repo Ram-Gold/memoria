@@ -6,24 +6,6 @@ enum AiEngineMode {
 }
 
 enum AiCloudProvider {
-  mistral(
-    id: 'mistral',
-    displayName: 'Mistral AI',
-    defaultModel: 'pixtral-12b-2409',
-    description: 'Pixtral 12B Vision • Default pedagogical engine',
-    brandIcon: BrandIcons.mistral,
-    envKeyName: 'MISTRAL_API_KEY',
-    consoleUrl: 'https://console.mistral.ai/api-keys/',
-  ),
-  openai(
-    id: 'openai',
-    displayName: 'OpenAI',
-    defaultModel: 'gpt-4o-mini',
-    description: 'GPT-4o-mini • High accuracy structured multimodal vision',
-    brandIcon: BrandIcons.openai,
-    envKeyName: 'OPENAI_API_KEY',
-    consoleUrl: 'https://platform.openai.com/api-keys',
-  ),
   gemini(
     id: 'gemini',
     displayName: 'Google Gemini',
@@ -32,15 +14,6 @@ enum AiCloudProvider {
     brandIcon: BrandIcons.gemini,
     envKeyName: 'GEMINI_API_KEY',
     consoleUrl: 'https://aistudio.google.com/app/apikey',
-  ),
-  claude(
-    id: 'claude',
-    displayName: 'Anthropic Claude',
-    defaultModel: 'claude-3-5-haiku-20241022',
-    description: 'Claude 3.5 Haiku • Nuanced linguistic & cultural vision',
-    brandIcon: BrandIcons.claude,
-    envKeyName: 'CLAUDE_API_KEY',
-    consoleUrl: 'https://console.anthropic.com/settings/keys',
   );
 
   final String id;

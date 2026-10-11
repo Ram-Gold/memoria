@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../app/providers.dart';
+import '../../core/languages/baybayin_engine.dart';
 import '../../core/languages/chin_format_helper.dart';
 import '../../core/services/app_tts_service.dart';
+import '../../core/services/tagalog_dictionary_service.dart';
 import '../../core/theme/memoria_tokens.dart';
 import '../../core/widgets/rubber_stamp.dart';
 import '../../core/widgets/washi_tape.dart';
@@ -41,6 +43,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   bool _isSaving = false;
   bool _invertScriptOrder = false; // For Baybayin vs Latin toggle
   bool _isFavorite = false;
+  bool _isEditing = false;
+  late final TextEditingController _wordController;
+  late final TextEditingController _meaningController;
+  late final TextEditingController _pronunciationController;
+  late final TextEditingController _sentenceController;
 
   @override
   void initState() {
@@ -54,7 +61,72 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 targetWord: 'Word',
                 box: [200, 200, 800, 800],
               ));
+    _wordController = TextEditingController(text: _selectedObject.targetWord);
+    _meaningController = TextEditingController(text: _selectedObject.labelEn);
+    _pronunciationController = TextEditingController(
+      text: _selectedObject.transliteration ?? _selectedObject.secondaryScript ?? '',
+    );
+    _sentenceController = TextEditingController(text: widget.analysisResult.sceneDescription);
     _ttsService.init();
+  }
+
+  void _syncControllersWithObject(DetectedObject obj) {
+    if (!_isEditing) {
+      _wordController.text = obj.targetWord;
+      _meaningController.text = obj.labelEn;
+      _pronunciationController.text = obj.transliteration ?? obj.secondaryScript ?? '';
+    }
+  }
+
+  void _toggleEditing() {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _isEditing = !_isEditing;
+      if (!_isEditing) {
+        // Save inline edits into current _selectedObject
+        final newWord = _wordController.text.trim();
+        final newMeaning = _meaningController.text.trim();
+        final newPronunciation = _pronunciationController.text.trim();
+        _selectedObject = _selectedObject.copyWith(
+          targetWord: newWord.isNotEmpty ? newWord : _selectedObject.targetWord,
+          labelEn: newMeaning.isNotEmpty ? newMeaning : _selectedObject.labelEn,
+          transliteration: newPronunciation.isNotEmpty ? newPronunciation : _selectedObject.transliteration,
+        );
+      }
+    });
+  }
+
+  void _autoTranscribe() {
+    HapticFeedback.lightImpact();
+    final language = ref.read(activeLanguageProvider);
+    final word = _wordController.text.trim();
+    final meaning = _meaningController.text.trim();
+
+    if (language.code == 'fil' || language.code == 'tl') {
+      final dictEntry = TagalogDictionaryService.instance.lookupByEnglish(meaning) ??
+          TagalogDictionaryService.instance.lookupByTagalog(word);
+      if (dictEntry != null) {
+        _wordController.text = dictEntry.baybayin;
+        _pronunciationController.text = '${dictEntry.word} · ${dictEntry.pronunciation}';
+      } else {
+        final tagalogWord = word.isNotEmpty ? word : meaning.toLowerCase();
+        final normalized = BaybayinEngine.normalizeTagalogPhonetics(tagalogWord);
+        final baybayin = BaybayinEngine.transliterate(normalized);
+        final pronunciation = BaybayinEngine.formatPronunciation(tagalogWord);
+        _wordController.text = baybayin;
+        _pronunciationController.text = '$tagalogWord · $pronunciation';
+      }
+    } else if (language.code == 'ja') {
+      final lex = LocalObjectLexicon.lookup(className: meaning, langCode: 'ja') ??
+          LocalObjectLexicon.reverseLookup(targetWord: word, langCode: 'ja');
+      if (lex != null) {
+        _wordController.text = lex.targetWord;
+        _pronunciationController.text = lex.secondaryScript.isNotEmpty
+            ? '${lex.secondaryScript} (${lex.transliteration})'
+            : lex.transliteration;
+      }
+    }
+    setState(() {});
   }
 
   Future<void> _speak([DetectedObject? obj]) async {
@@ -94,12 +166,21 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           .where((o) => o.isConfident(threshold))
           .toList();
 
-      // Ensure English label is fully resolved for the selected object
-      String labelEn = _selectedObject.labelEn.trim();
+      // Ensure English label and target word are fully resolved, honoring inline edits
+      String labelEn = _meaningController.text.trim().isNotEmpty
+          ? _meaningController.text.trim()
+          : _selectedObject.labelEn.trim();
+      String selectedWord = _wordController.text.trim().isNotEmpty
+          ? _wordController.text.trim()
+          : _selectedObject.targetWord.trim();
+      String transliteration = _pronunciationController.text.trim().isNotEmpty
+          ? _pronunciationController.text.trim()
+          : (_selectedObject.transliteration ?? '');
+
       if (labelEn.isEmpty || labelEn.toLowerCase() == 'object' || labelEn.toLowerCase() == 'item') {
         final rev = LocalObjectLexicon.reverseLookup(
-          targetWord: _selectedObject.targetWord,
-          transliteration: _selectedObject.transliteration,
+          targetWord: selectedWord,
+          transliteration: transliteration,
           secondaryScript: _selectedObject.secondaryScript,
           langCode: language.code,
         );
@@ -109,7 +190,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       }
 
       final resolvedSelectedObject = _selectedObject.copyWith(
+        targetWord: selectedWord,
         labelEn: labelEn.isNotEmpty ? labelEn : _selectedObject.labelEn,
+        transliteration: transliteration,
       );
 
       // Guarantee the focal object selected by the user is ALWAYS preserved,
@@ -186,6 +269,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   @override
   void dispose() {
     _ttsService.stop();
+    _wordController.dispose();
+    _meaningController.dispose();
+    _pronunciationController.dispose();
+    _sentenceController.dispose();
     super.dispose();
   }
 
@@ -212,15 +299,19 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => context.pop(),
         ),
-        title: Text(
-          'Polaroid Reveal',
-          style: MemoriaTokens.headlineSm(),
-        ),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.volume2),
             tooltip: 'Pronunciation TTS',
             onPressed: _speak,
+          ),
+          IconButton(
+            icon: Icon(
+              _isEditing ? LucideIcons.check : LucideIcons.pencil,
+              color: _isEditing ? MemoriaTokens.primary : MemoriaTokens.onSurface,
+            ),
+            tooltip: _isEditing ? 'Done Editing' : 'Customize Polaroid Text',
+            onPressed: _toggleEditing,
           ),
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
@@ -312,7 +403,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                                           child: GestureDetector(
                                             onTap: () {
                                               HapticFeedback.lightImpact();
-                                              setState(() => _selectedObject = obj);
+                                              setState(() {
+                                                _selectedObject = obj;
+                                                _syncControllersWithObject(obj);
+                                              });
                                               _speak(obj);
                                             },
                                             child: Stack(
@@ -375,31 +469,115 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      line1,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: MemoriaTokens.handwrittenChin(
-                                        fontSize: line1.length > 18 ? 22 : (line1.length > 12 ? 26 : 30),
-                                        color: MemoriaTokens.onSurface,
-                                      ),
+                                if (_isEditing)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 6,
+                                              child: TextField(
+                                                controller: _wordController,
+                                                textAlign: TextAlign.center,
+                                                style: MemoriaTokens.handwrittenChin(
+                                                  fontSize: 22,
+                                                  color: MemoriaTokens.onSurface,
+                                                ),
+                                                decoration: InputDecoration(
+                                                  isDense: true,
+                                                  hintText: 'Target Word',
+                                                  hintStyle: MemoriaTokens.handwrittenChin(
+                                                    fontSize: 18,
+                                                    color: MemoriaTokens.outline,
+                                                  ),
+                                                  contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                                                  filled: true,
+                                                  fillColor: Colors.black.withValues(alpha: 0.04),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(4),
+                                                    borderSide: const BorderSide(color: MemoriaTokens.primary, width: 0.8),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              flex: 5,
+                                              child: TextField(
+                                                controller: _meaningController,
+                                                textAlign: TextAlign.center,
+                                                style: MemoriaTokens.bodySm().copyWith(fontWeight: FontWeight.w600),
+                                                decoration: InputDecoration(
+                                                  isDense: true,
+                                                  hintText: 'Meaning',
+                                                  hintStyle: MemoriaTokens.bodySm(color: MemoriaTokens.outline),
+                                                  contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                                                  filled: true,
+                                                  fillColor: Colors.black.withValues(alpha: 0.04),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(4),
+                                                    borderSide: const BorderSide(color: MemoriaTokens.polaroidBorder, width: 0.8),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        TextField(
+                                          controller: _pronunciationController,
+                                          textAlign: TextAlign.center,
+                                          style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
+                                          decoration: InputDecoration(
+                                            isDense: true,
+                                            hintText: 'Pronunciation Guide (e.g. neko, [ak-lat])',
+                                            hintStyle: MemoriaTokens.bodySm(color: MemoriaTokens.outline),
+                                            contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                                            filled: true,
+                                            fillColor: Colors.black.withValues(alpha: 0.04),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(4),
+                                              borderSide: const BorderSide(color: MemoriaTokens.polaroidBorder, width: 0.8),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                      ],
                                     ),
-                                    if (line2.isNotEmpty) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        line2,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
-                                      ),
-                                    ],
-                                  ],
-                                ),
+                                  )
+                                else
+                                  GestureDetector(
+                                    onTap: _toggleEditing,
+                                    behavior: HitTestBehavior.opaque,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          line1,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: MemoriaTokens.handwrittenChin(
+                                            fontSize: line1.length > 18 ? 22 : (line1.length > 12 ? 26 : 30),
+                                            color: MemoriaTokens.onSurface,
+                                          ),
+                                        ),
+                                        if (line2.isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            line2,
+                                            textAlign: TextAlign.center,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurfaceVariant),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
 
                                 // Rubber Heart Stamp
                                 Positioned(
@@ -430,6 +608,18 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               ),
             ),
 
+            if (_isEditing) ...[
+              const SizedBox(height: 12),
+              ActionChip(
+                avatar: const Icon(LucideIcons.sparkles, size: 14, color: MemoriaTokens.primary),
+                label: const Text('Auto-Transcribe Pronunciation'),
+                labelStyle: MemoriaTokens.labelSm(color: MemoriaTokens.primary),
+                backgroundColor: MemoriaTokens.primaryContainer.withValues(alpha: 0.5),
+                side: const BorderSide(color: MemoriaTokens.primary, width: 0.8),
+                onPressed: _autoTranscribe,
+              ),
+            ],
+
             const SizedBox(height: 24),
 
             // Script Order Switcher for Tagalog / Baybayin
@@ -445,7 +635,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             ],
 
             // 2. AI Scene Context Card
-            if (widget.analysisResult.sceneDescription.isNotEmpty) ...[
+            if (widget.analysisResult.sceneDescription.isNotEmpty || _isEditing) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -459,10 +649,21 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     const Icon(LucideIcons.sparkles, size: 18, color: MemoriaTokens.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        '“${widget.analysisResult.sceneDescription}”',
-                        style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurface),
-                      ),
+                      child: _isEditing
+                          ? TextField(
+                              controller: _sentenceController,
+                              maxLines: 2,
+                              style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurface),
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                hintText: 'Custom scene context or example sentence...',
+                                border: InputBorder.none,
+                              ),
+                            )
+                          : Text(
+                              '“${_sentenceController.text.isNotEmpty ? _sentenceController.text : widget.analysisResult.sceneDescription}”',
+                              style: MemoriaTokens.bodySm(color: MemoriaTokens.onSurface),
+                            ),
                     ),
                   ],
                 ),
@@ -566,7 +767,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 return GestureDetector(
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    setState(() => _selectedObject = obj);
+                    setState(() {
+                      _selectedObject = obj;
+                      _syncControllersWithObject(obj);
+                    });
                     _speak(obj);
                   },
                   child: Container(

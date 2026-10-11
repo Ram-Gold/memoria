@@ -7,6 +7,7 @@ import '../../core/languages/language_profile.dart';
 import '../../domain/models/analysis_result.dart';
 import '../../domain/models/detected_object.dart';
 import '../../domain/services/vision_service.dart';
+import '../../core/languages/script_validator.dart';
 import 'local_object_lexicon.dart';
 import 'mock_vision_service.dart';
 
@@ -116,11 +117,12 @@ class LocalMlKitVisionService implements VisionService {
                 800,
               ];
 
-              detectedObjects.add(lexicon.toDetectedObject(
+              final rawObj = lexicon.toDetectedObject(
                 id: id,
                 box: boxCoords,
                 confidence: cand.confidence,
-              ));
+              );
+              detectedObjects.add(ScriptValidator.sanitizeObject(rawObj, language.code));
               objectIdx++;
             }
 

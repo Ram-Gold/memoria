@@ -5,13 +5,10 @@ import '../core/constants/ai_providers.dart';
 import '../core/languages/language_profile.dart';
 import '../core/rag/rag_service.dart';
 import '../data/repositories/polaroid_repository.dart';
-import '../data/services/claude_vision_service.dart';
 import '../data/services/gemini_vision_service.dart';
 import '../data/services/local_gemma_vision_service.dart';
 import '../data/services/local_mlkit_vision_service.dart';
 import '../data/services/local_vlm_model_manager.dart';
-import '../data/services/mistral_vision_service.dart';
-import '../data/services/openai_vision_service.dart';
 import '../domain/models/detected_object.dart';
 import '../domain/models/polaroid.dart';
 import '../domain/models/polaroid_format.dart';
@@ -59,16 +56,7 @@ final visionServiceProvider = Provider<VisionService>((ref) {
   final apiKeysNotifier = ref.watch(aiApiKeysProvider.notifier);
   final key = apiKeysNotifier.getKey(selectedProvider);
 
-  switch (selectedProvider) {
-    case AiCloudProvider.mistral:
-      return MistralVisionService(apiKey: key);
-    case AiCloudProvider.openai:
-      return OpenAiVisionService(apiKey: key);
-    case AiCloudProvider.gemini:
-      return GeminiVisionService(apiKey: key);
-    case AiCloudProvider.claude:
-      return ClaudeVisionService(apiKey: key);
-  }
+  return GeminiVisionService(apiKey: key);
 });
 
 final polaroidRepositoryProvider = Provider<PolaroidRepository>((ref) {
@@ -114,6 +102,11 @@ class PolaroidsNotifier extends StateNotifier<AsyncValue<List<Polaroid>>> {
 
   Future<void> toggleFavorite(String id, bool isFav) async {
     await _repository.toggleFavorite(id, isFav);
+    await loadPolaroids();
+  }
+
+  Future<void> updatePolaroid(Polaroid polaroid) async {
+    await _repository.savePolaroid(polaroid);
     await loadPolaroids();
   }
 }

@@ -17,11 +17,13 @@ import '../../domain/models/analysis_result.dart';
 class DevelopScreen extends ConsumerStatefulWidget {
   final String imagePath;
   final String? layoutId;
+  final Future<String>? croppedFuture;
 
   const DevelopScreen({
     super.key,
     required this.imagePath,
     this.layoutId,
+    this.croppedFuture,
   });
 
   @override
@@ -41,6 +43,8 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen>
   bool _isAiDone = false;
   bool _isTransitioning = false;
   AnalysisResult? _aiResult;
+
+  late String _effectiveImagePath;
 
   double _agitationLevel = 0.0;
   DateTime _lastShakeTime = DateTime.now();
@@ -75,6 +79,21 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen>
     // Initial mechanical ejection haptic tick
     HapticFeedback.mediumImpact();
     _printController.forward();
+
+    _effectiveImagePath = widget.imagePath;
+
+    // Listen to background isolate crop task if in flight
+    if (widget.croppedFuture != null) {
+      widget.croppedFuture!.then((croppedPath) {
+        if (mounted) {
+          setState(() {
+            _effectiveImagePath = croppedPath;
+          });
+        }
+      }).catchError((e) {
+        debugPrint('Error waiting for background crop: $e');
+      });
+    }
 
     _startAiAnalysis();
     _listenToShakeSensor();
@@ -123,8 +142,13 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen>
 
   Future<void> _startAiAnalysis() async {
     try {
+      // If cropping is executing in background isolate, await cropped image path so AI analyzes the framed subject
+      final targetPath = widget.croppedFuture != null
+          ? await widget.croppedFuture!
+          : widget.imagePath;
+
       // Downscale photo in an isolate to ~768px JPEG (~80KB) to prevent OOM and reduce upload latency by 99%
-      final bytes = await ImageDownscaler.downscaleFile(widget.imagePath);
+      final bytes = await ImageDownscaler.downscaleFile(targetPath);
       final language = ref.read(activeLanguageProvider);
       final visionService = ref.read(visionServiceProvider);
 
@@ -174,7 +198,7 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen>
           context.pushReplacement(
             '/editor',
             extra: {
-              'imagePath': widget.imagePath,
+              'imagePath': _effectiveImagePath,
               'analysisResult': _aiResult,
               'layoutId': resolvedLayoutId,
             },
@@ -264,12 +288,12 @@ class _DevelopScreenState extends ConsumerState<DevelopScreen>
                               fit: StackFit.expand,
                               children: [
                                 // Emerging Latent Photograph
-                                if (File(widget.imagePath).existsSync())
+                                if (File(_effectiveImagePath).existsSync())
                                   AnimatedOpacity(
                                     duration: const Duration(milliseconds: 250),
                                     opacity: (0.12 + (0.88 * _agitationLevel)).clamp(0.0, 1.0),
                                     child: Image.file(
-                                      File(widget.imagePath),
+                                      File(_effectiveImagePath),
                                       fit: BoxFit.cover,
                                     ),
                                   ),
