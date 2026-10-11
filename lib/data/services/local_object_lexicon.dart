@@ -1,4 +1,5 @@
 import '../../core/languages/baybayin_engine.dart';
+import '../../core/services/tagalog_dictionary_service.dart';
 import '../../domain/models/detected_object.dart';
 
 class LexiconEntry {
@@ -1915,14 +1916,25 @@ class LocalObjectLexicon {
     final code = langCode.trim().toLowerCase();
 
     if (code == 'fil' || code == 'tl') {
-      final baybayin = BaybayinEngine.transliterate(cleanLabel.toLowerCase());
+      final known = TagalogDictionaryService.instance.lookupByEnglish(cleanLabel);
+      if (known != null) {
+        return LexiconEntry(
+          labelEn: cleanLabel,
+          targetWord: known.baybayin,
+          secondaryScript: known.word,
+          transliteration: known.pronunciation,
+          partOfSpeech: known.partOfSpeech,
+          difficultyLevel: known.difficultyLevel,
+        );
+      }
+      final dictEntry = TagalogDictionaryService.instance.resolveOrSynthesize(cleanLabel);
       return LexiconEntry(
         labelEn: cleanLabel,
-        targetWord: baybayin,
+        targetWord: dictEntry.baybayin,
         secondaryScript: cleanLabel.toLowerCase(),
-        transliteration: '[${cleanLabel.toLowerCase()}]',
-        partOfSpeech: 'Noun',
-        difficultyLevel: 'A1',
+        transliteration: dictEntry.pronunciation,
+        partOfSpeech: dictEntry.partOfSpeech,
+        difficultyLevel: dictEntry.difficultyLevel,
       );
     } else if (code == 'ja') {
       return LexiconEntry(

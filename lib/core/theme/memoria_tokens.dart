@@ -177,17 +177,20 @@ abstract class MemoriaTokens {
         color: color,
       );
 
-  // Handwritten Polaroid chin calligraphy script
+  // Handwritten Polaroid chin calligraphy script with authentic Tagalog / Baybayin fallback
   static TextStyle handwrittenChin({
     double fontSize = 28,
     Color color = onSurface,
+    List<String> fontFamilyFallback = const ['Noto Sans Tagalog', 'sans-serif'],
   }) =>
       GoogleFonts.caveat(
         fontSize: fontSize,
         fontWeight: FontWeight.w700,
-        height: 1.1,
+        height: 1.15,
         letterSpacing: 0.02,
         color: color,
+      ).copyWith(
+        fontFamilyFallback: fontFamilyFallback,
       );
 
   // Monospace for ISO / Telemetry / Coordinates

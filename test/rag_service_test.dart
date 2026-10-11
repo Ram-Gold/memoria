@@ -65,10 +65,17 @@ void main() {
     });
 
     test('handles fallback on-the-fly generation for unknown Filipino words', () {
+      final results = retriever.retrieve('spacecraft', 'fil');
+      expect(results, isNotEmpty);
+      expect(results.first.languageCode, 'fil');
+      expect(results.first.secondaryScript, 'spasekrapt');
+    });
+
+    test('resolves everyday objects like banana to authentic Tagalog saging', () {
       final results = retriever.retrieve('banana', 'fil');
       expect(results, isNotEmpty);
       expect(results.first.languageCode, 'fil');
-      expect(results.first.secondaryScript, 'banana');
+      expect(results.first.secondaryScript, 'saging');
     });
   });
 

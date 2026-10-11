@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../../core/languages/baybayin_engine.dart';
 import '../../core/languages/language_profile.dart';
+import '../../core/services/tagalog_dictionary_service.dart';
 import '../../domain/models/analysis_result.dart';
 import '../../domain/services/vision_service.dart';
 import 'mock_vision_service.dart';
@@ -133,12 +134,22 @@ Return pure valid JSON with NO commentary, markdown fences, or preamble, conform
 
       if (language.code == 'fil') {
         final verifiedObjects = result.detectedObjects.map((obj) {
-          String baybayin = obj.targetWord;
-          if (!BaybayinEngine.hasBaybayinGlyphs(baybayin)) {
-            final sourceTagalog = obj.secondaryScript ?? obj.labelEn;
-            baybayin = BaybayinEngine.transliterate(sourceTagalog);
-          }
-          return obj.copyWith(targetWord: baybayin);
+          final dictEntry = TagalogDictionaryService.instance.lookupByEnglish(obj.labelEn);
+          final tagalogWord = dictEntry?.word ??
+              (obj.secondaryScript != null && obj.secondaryScript!.trim().isNotEmpty
+                  ? obj.secondaryScript!.trim().toLowerCase()
+                  : obj.labelEn.trim().toLowerCase());
+
+          final baybayin = BaybayinEngine.transliterate(tagalogWord);
+          final pronunciation = (obj.transliteration != null && obj.transliteration!.startsWith('['))
+              ? obj.transliteration!
+              : BaybayinEngine.formatPronunciation(tagalogWord);
+
+          return obj.copyWith(
+            targetWord: baybayin,
+            secondaryScript: tagalogWord,
+            transliteration: pronunciation,
+          );
         }).toList();
 
         result = AnalysisResult(

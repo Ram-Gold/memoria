@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/providers.dart';
+import '../languages/baybayin_engine.dart';
 import '../theme/memoria_tokens.dart';
 import 'rubber_stamp.dart';
 import 'washi_tape.dart';
@@ -129,15 +130,25 @@ class PolaroidFrame extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (primaryText != null && primaryText!.isNotEmpty) ...[
-                          Text(
-                            primaryText!,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: MemoriaTokens.handwrittenChin(
-                              fontSize: primaryFontSize ?? (chinHeight > 60 ? 28 : (chinHeight < 45 ? 15 : 20)),
-                              color: MemoriaTokens.onSurface,
-                            ),
+                          Builder(
+                            builder: (context) {
+                              final isBaybayin = BaybayinEngine.hasBaybayinGlyphs(primaryText!);
+                              final baseSize = chinHeight > 60 ? 28.0 : (chinHeight < 45 ? 15.0 : 20.0);
+                              final calculatedSize = primaryFontSize ?? (isBaybayin ? baseSize + 2.0 : baseSize);
+
+                              return Text(
+                                primaryText!,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: MemoriaTokens.handwrittenChin(
+                                  fontSize: calculatedSize,
+                                  color: MemoriaTokens.onSurface,
+                                ).copyWith(
+                                  letterSpacing: isBaybayin ? 0.04 : 0.02,
+                                ),
+                              );
+                            },
                           ),
                         ],
                         if (subtitleText != null && subtitleText!.isNotEmpty) ...[

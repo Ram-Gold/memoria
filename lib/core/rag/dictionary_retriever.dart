@@ -1,4 +1,5 @@
 import '../languages/baybayin_engine.dart';
+import '../services/tagalog_dictionary_service.dart';
 import 'models/lexicon_entry.dart';
 
 class DictionaryRetriever {
@@ -238,18 +239,22 @@ class DictionaryRetriever {
       return matches;
     }
 
-    // Fallback: If Filipino, auto-generate deterministic Baybayin entry on the fly
-    if (languageCode == 'fil') {
+    // Fallback: If Filipino, resolve through TagalogDictionaryService
+    if (languageCode == 'fil' || languageCode == 'tl') {
+      final dictEntry = TagalogDictionaryService.instance.lookupByEnglish(labelEn) ??
+          TagalogDictionaryService.instance.resolveOrSynthesize(labelEn);
+
       return [
         LexiconEntry(
           labelEn: labelEn,
           languageCode: 'fil',
-          targetWord: BaybayinEngine.transliterate(labelEn),
-          secondaryScript: labelEn.toLowerCase(),
-          transliteration: '[$clean]',
-          difficultyLevel: 'A1',
-          examplePhrase: 'Isang $clean',
-          phraseTranslation: 'A $clean',
+          targetWord: dictEntry.baybayin,
+          secondaryScript: dictEntry.word,
+          transliteration: dictEntry.pronunciation,
+          partOfSpeech: dictEntry.partOfSpeech,
+          difficultyLevel: dictEntry.difficultyLevel,
+          examplePhrase: dictEntry.examplePhrase,
+          phraseTranslation: dictEntry.exampleTranslation,
         )
       ];
     }
